@@ -1,0 +1,44 @@
+#practice-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 10000;
+}
+
+.practice-box {
+  width: 90%;
+  max-width: 900px;
+  background: #fff;
+  margin: 3% auto;
+  padding: 20px;
+  border-radius: 20px;
+  overflow-y: auto;
+}
+
+.practice-level {
+  margin-bottom: 20px;
+}
+
+.practice-question {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.practice-question img {
+  width: 120px;
+  border-radius: 10px;
+  border: 2px solid #ccc;
+}
+
+.practice-question button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+}
+
+.practice-question button.done {
+  background: #81c784;
+}

@@ -53,6 +53,16 @@
     <script src="lib/abc.min.js" defer></script>
     <script src="lib/codejar/codejar.min.js" defer></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js" defer></script>
+    <link rel="stylesheet" href="js/practice/practice.css">
+    <script type="module" src="js/badges/BadgeManager.js"></script>
+    <script type="module" src="js/practice/PracticeEntry.js"></script>
+    <script type="module" src="js/practice/PracticeManager.js"></script>
+    <script type="module" src="js/practice/PracticeUI.js"></script>
+    <script type="module">
+        import { PracticeUI } from "./js/practice/PracticeUI.js";
+        window.startPracticeMode = () => PracticeUI.open();
+    </script>
+
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
 
     <!-- libgif.js (SuperGif) provides low-level GIF frame extraction.
