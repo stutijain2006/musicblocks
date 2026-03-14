@@ -3,27 +3,33 @@ export const PracticeProblems = [
     level: 1,
     title: "Hot Cross Buns – Discover the Form",
     description: `
-      Hot Cross Buns has a simple musical form.
+      <p><b>Hot Cross Buns</b> has a simple musical form.</p>
 
-      Two musical chunks are already on the screen:
+      <p>Two musical chunks are already on the screen:</p>
 
-      A = HCB  
-      B = Penny  
+      <ul>
+        <li><b>A = HCB</b></li>
+        <li><b>B = Penny</b></li>
+      </ul>
 
-      Your task:
+      <p><b>Your task:</b></p>
 
-      1. Arrange the blocks under the Start block to recreate the melody.
-      2. The melody structure is **A A B A**.
-      3. You can use the **repeat block** to help build the pattern.
-      4. Press Play to hear your melody.
+      <ol>
+        <li>Arrange the blocks under the <b>Start</b> block to recreate the melody.</li>
+        <li>The melody structure is <b>A A B A</b>.</li>
+        <li>You can use the <b>repeat block</b> to help build the pattern.</li>
+        <li>Press <b>Play</b> to hear your melody.</li>
+      </ol>
 
-      Once you recreate the correct pattern, explore further:
+      <p><b>Once you recreate the correct pattern, explore further:</b></p>
 
-      • Change octaves  
-      • Change pitches  
-      • Try invert or transpose blocks  
-      • Make your own variations
-      `,
+      <ul>
+        <li>Change octaves</li>
+        <li>Change pitches</li>
+        <li>Try <b>invert</b> or <b>transpose</b> blocks</li>
+        <li>Make your own variations</li>
+      </ul>
+    `,
     expected: {
       pattern: ["A", "A", "B", "A"]
     },

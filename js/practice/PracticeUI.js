@@ -111,7 +111,7 @@ export const PracticeUI = {
         );
         if (btn) btn.classList.add("done");
       } else {
-        alert("❌ Not quite yet. Compare with the reference image.");
+        alert("❌ Not complete yet. Try again.");
       }
     };
   }
