@@ -28,17 +28,20 @@ export const PracticeUI = {
   },
 
   loadStarterBlocks(level) {
-
-    if (level !== 1) return;
-
     const activity =
       typeof globalActivity !== "undefined"
         ? globalActivity
         : window.activity;
 
     if (!activity?.blocks) return;
+    const projectFiles ={
+      1: "hcb_level1.tb",
+      2: "sakura.tb"
+    }
+    const file = projectFiles[level];
+    if (!file) return;
 
-    fetch("js/practice_projects/hcb_level1.tb")
+    fetch(`js/practice_projects/${file}`)
       .then(res => res.text())
       .then(data => {
         const projectData = JSON.parse(data);

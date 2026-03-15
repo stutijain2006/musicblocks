@@ -38,19 +38,43 @@ export const PracticeProblems = [
 
   {
     level: 2,
-    title: "Hot Cross Buns – Complete Form",
+    title: "Sakura Sakura",
     description: `
-Now extend the melody by repeating patterns.
+      <p><b>Sakura Sakura – Discover the Melody</b></p>
 
-Your task:
-• Use repetition to organize the melody
-• The tune should sound structured
-• Observe how musical form emerges
+      <p>
+      "Sakura Sakura" is a famous traditional song from <b>Japan</b>.  
+      In this activity, you will recreate the melody using musical blocks.
+      </p>
+
+      <p><b>Following musical chunks are already on the screen:</b></p>
+
+      <ul>
+        <li><b>Sakura</b></li>
+        <li><b>yayoi</b></li>
+        <li><b>miwatasu</b></li>
+        <li><b>miniyukan</b></li>
+      </ul>
+
+      <p><b>Your task:</b></p>
+
+      <ol>
+        <li>Arrange the blocks under the <b>Start</b> block.</li>
+        <li>The melody structure is <b>Sakura yayoi miwatasu yayoi miwatasu Sakura miniyukan, and repeat this melody 4 times.</b>.</li>
+        <li>You may use the <b>repeat block</b> to help build the pattern.</li>
+        <li>Press <b>Play</b> to hear your melody.</li>
+      </ol>
+
+      <p><b>After you complete the pattern, explore further:</b></p>
+
+      <ul>
+        <li>Change pitches</li>
+        <li>Try different octaves</li>
+        <li>Create your own variation of the melody</li>
+      </ul>
     `,
-    image: "images/practice/hot_cross_buns_full.png",
     expected: {
-      blocks: ["repeat"],
-      minNotes: 6
+      pattern: ["A", "A", "B", "A"]
     },
     badgeGroup: "melody_basics"
   },
