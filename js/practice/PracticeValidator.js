@@ -1,14 +1,15 @@
 import { LevelExpected } from "./levelExpected.js";
 
 function getActivity() {
-    const globalActivityRef = globalThis.globalActivity;
-
-    if (globalActivityRef?.blocks) {
-        return globalActivityRef;
-    }
-
-    if (window.activity?.blocks) {
-        return window.activity;
+    if (window.ActivityContext && typeof window.ActivityContext.getActivity === "function") {
+        try {
+            const activity = window.ActivityContext.getActivity();
+            if (activity?.blocks) {
+                return activity;
+            }
+        } catch (e) {
+            // Activity may not be initialized yet.
+        }
     }
 
     return null;
