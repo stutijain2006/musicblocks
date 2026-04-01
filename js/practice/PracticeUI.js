@@ -17,6 +17,11 @@ export const PracticeUI = {
 
     loadProjectData(activity, projectData) {
         activity.sendAllToTrash(false, true);
+        if (activity.turtles && typeof activity.turtles.getTurtleCount === "function") {
+            for (let turtle = 0; turtle < activity.turtles.getTurtleCount(); turtle++) {
+                activity.turtles.getTurtle(turtle).painter.doClear(true, true, true);
+            }
+        }
         activity.blocks.loadNewBlocks(projectData);
         activity.blocks.adjustDocks();
         activity.refreshCanvas();
@@ -53,7 +58,10 @@ export const PracticeUI = {
         const projectFiles = {
             1: "hcb_level1.tb",
             2: "sakura.tb",
-            3: "rhythm_level3.tb"
+            3: "rhythm_level3.tb",
+            5: "geometry_level5_starter.tb",
+            6: "geometry_level6_starter.tb",
+            7: "blank_start.tb"
         };
 
         const file = projectFiles[level];
