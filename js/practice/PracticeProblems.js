@@ -140,6 +140,56 @@ export const PracticeProblems = [
         },
         badgeGroup: "rhythm_basics"
     },
+    
+ {
+    level: 4,
+    title: "Chest, Snap, Clap – Build the Rhythm",
+    description: `
+    <p><b>Chest, Snap, Clap</b> is a fun rhythm you can perform on your own body — no drums needed!</p>
+
+    <p>You will transcribe and recreate this rhythm using Music Blocks' <b>Phrase Maker</b>.</p>
+
+    <p><b>Your task:</b></p>
+
+    <ol>
+        <li>Open <b>Phrase Maker</b> and add drum blocks for <b>chest, snap, and clap</b> sounds.</li>
+        <li>Transcribe the <b>first half</b> of the rhythm: use <b>8 eighth notes</b> in the Phrase Maker.</li>
+        <li>Transcribe the <b>second half</b>: use <b>7 eighth notes and 2 sixteenth notes</b>.</li>
+        <li>Export both halves as <b>Action blocks</b> from Phrase Maker.</li>
+        <li>Place the Action blocks under the <b>Start</b> block.</li>
+        <li>Use a <b>repeat block</b> to loop your rhythm.</li>
+        <li>Press <b>Play</b> to hear your rhythm.</li>
+    </ol>
+
+    <p><b>Think about:</b></p>
+
+    <ul>
+        <li>What is the first sound? The second? The third?</li>
+        <li>Are there any patterns in the first half? Does anything repeat?</li>
+        <li>How does the first half differ from the second half?</li>
+        <li>How do shorter notes (sixteenth notes) change the feel of the rhythm?</li>
+    </ul>
+
+    <p><b>Once you complete the rhythm, explore further:</b></p>
+
+    <ul>
+        <li>Change drum sounds by clicking the drum name to open the pie menu.</li>
+        <li>Create your own rhythm variations.</li>
+        <li>Try different note durations.</li>
+    </ul>
+
+    <p><b>Level check:</b> your project should express the two-part form using Action blocks from Phrase Maker, looped with a repeat block.</p>
+    `,
+    image: "images/practice/Level4.webp",
+    expected: {
+        blocks: ["repeat", "playdrum"],
+        phraseMakerWorkflow: true,
+        twoPartForm: true,
+        minNotes: 6
+    },
+    badgeGroup: "rhythm_basics"
+}
+,
 
     {
         level: 5,
@@ -280,4 +330,50 @@ export const PracticeProblems = [
         },
         badgeGroup: "geometry_rhythm"
     }
+,
+{
+    level: 8,
+    title: "Animated Polyrhythms",
+    description: `
+    <p><b>Polyrhythm</b> means playing two different rhythms together at the same time.</p>
+
+    <p>In this activity, you will create polyrhythms and visualize them using animations.</p>
+
+    <p><b>Your task:</b></p>
+
+    <ol>
+        <li>Open the <b>Rhythm Ruler</b> widget with two drum blocks.</li>
+        <li>With one ruler, divide by <b>2 (duplets)</b>.</li>
+        <li>With the other ruler, divide by <b>3 (triplets)</b>.</li>
+        <li>Save out your drum machines.</li>
+        <li>Play both rhythms together to hear the polyrhythm.</li>
+        <li>Add an <b>Avatar block</b> inside your notes to create animation.</li>
+        <li>Use <b>On-every-note-do</b> to animate each note.</li>
+    </ol>
+
+    <p><b>Explore further:</b></p>
+    <ul>
+        <li>Try using <b>pitches instead of drums</b> to create a melodic polyrhythm.</li>
+        <li>Experiment with other divisors beyond 2 and 3.</li>
+    </ul>
+
+    <p><b>Think about:</b></p>
+
+    <ul>
+        <li>When do the two rhythms align?</li>
+        <li>When do they go out of sync?</li>
+        <li>How does the animation show <b>phase shifts</b> between the two rhythms?</li>
+        <li>How does the animation help you understand rhythm?</li>
+    </ul>
+
+    <p><b>Level check:</b> your project should include two different rhythms (divisor 2 & 3) playing together, with animation using avatars and <b>On-every-note-do</b>.</p>
+    `,
+    expected: {
+        polyrhythm: true,
+        avatarAnimation: true,
+        onEveryNoteDo: true,
+        rhythmRuler: true
+    },
+    badgeGroup: "polyrhythm"
+}
 ];
