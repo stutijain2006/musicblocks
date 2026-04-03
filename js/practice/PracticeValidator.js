@@ -48,6 +48,22 @@ export const PracticeValidator = {
         return this.validateBasic(problem);
     },
 
+    getBoxShapeAutomationDebug() {
+        const blockList = this.getBlockList();
+        const startBlocks = Object.values(blockList).filter(
+            block => block?.name === "start" && !block.trash
+        );
+
+        const startSummaries = startBlocks.map(startBlock =>
+            this.getStartBlockBoxAutomationDebug(startBlock, blockList)
+        );
+
+        return {
+            startCount: startBlocks.length,
+            startSummaries
+        };
+    },
+
     validatePattern(expectedPattern) {
         const activity = getActivity();
         if (!activity?.blocks?.blockList) return false;
@@ -95,33 +111,13 @@ export const PracticeValidator = {
 
     validateBoxShapeAutomation() {
         const blockList = this.getBlockList();
-        if (!this.hasBoxInitialization(blockList, "box1")) return false;
+        const startBlocks = Object.values(blockList).filter(
+            block => block?.name === "start" && !block.trash
+        );
 
-        for (const block of Object.values(blockList)) {
-            if (!block || block.trash || block.name !== "repeat") continue;
-
-            const outerBody = this.collectSequence(block.connections?.[2], blockList);
-            const innerRepeat = outerBody
-                .map(id => blockList[id])
-                .find(
-                    candidate =>
-                        candidate?.name === "repeat" &&
-                        this.isBoxReference(candidate.connections?.[1], blockList, "box1")
-                );
-
-            if (!innerRepeat) continue;
-            if (!this.repeatBodyMatchesBoxPolygon(innerRepeat, blockList, "box1")) continue;
-
-            const updatesBox = outerBody.some(id =>
-                this.isBoxIncrementBlock(blockList[id], blockList, "box1")
-            );
-
-            if (updatesBox) {
-                return true;
-            }
-        }
-
-        return false;
+        return startBlocks.some(startBlock =>
+            this.startBlockMatchesBoxShapeAutomation(startBlock, blockList)
+        );
     },
 
     validateCyclicWholeNote() {
@@ -444,6 +440,86 @@ export const PracticeValidator = {
         }
 
         return matchedSides;
+    },
+
+    startBlockMatchesBoxShapeAutomation(startBlock, blockList) {
+        const startSequence = this.collectSequence(startBlock.connections?.[1], blockList);
+        if (startSequence.length === 0) return false;
+
+        const hasBoxInitialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box1")
+        );
+        if (!hasBoxInitialization) return false;
+
+        for (const id of startSequence) {
+            const block = blockList[id];
+            if (!block || block.trash || block.name !== "repeat") continue;
+
+            const repeatCount = this.getNumericValue(block.connections?.[1], blockList);
+            if (typeof repeatCount !== "number" || repeatCount < 2) continue;
+
+            const outerBodyIds = this.collectSequence(block.connections?.[2], blockList);
+            const innerRepeatIndex = outerBodyIds.findIndex(
+                bodyId =>
+                    blockList[bodyId]?.name === "repeat" &&
+                    this.isBoxReference(blockList[bodyId]?.connections?.[1], blockList, "box1") &&
+                    this.repeatBodyMatchesBoxPolygon(blockList[bodyId], blockList, "box1")
+            );
+
+            if (innerRepeatIndex === -1) continue;
+
+            const hasIncrementAfterShape = outerBodyIds
+                .slice(innerRepeatIndex + 1)
+                .some(bodyId => this.isBoxIncrementBlock(blockList[bodyId], blockList, "box1"));
+
+            if (hasIncrementAfterShape) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    getStartBlockBoxAutomationDebug(startBlock, blockList) {
+        const startSequence = this.collectSequence(startBlock.connections?.[1], blockList);
+        const hasBoxInitialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box1")
+        );
+
+        const outerRepeats = startSequence
+            .map(id => blockList[id])
+            .filter(block => block && !block.trash && block.name === "repeat")
+            .map(block => {
+                const repeatCount = this.getNumericValue(block.connections?.[1], blockList);
+                const outerBodyIds = this.collectSequence(block.connections?.[2], blockList);
+                const innerRepeatIndex = outerBodyIds.findIndex(
+                    bodyId =>
+                        blockList[bodyId]?.name === "repeat" &&
+                        this.isBoxReference(blockList[bodyId]?.connections?.[1], blockList, "box1") &&
+                        this.repeatBodyMatchesBoxPolygon(blockList[bodyId], blockList, "box1")
+                );
+
+                const hasIncrementAfterShape =
+                    innerRepeatIndex !== -1 &&
+                    outerBodyIds
+                        .slice(innerRepeatIndex + 1)
+                        .some(bodyId =>
+                            this.isBoxIncrementBlock(blockList[bodyId], blockList, "box1")
+                        );
+
+                return {
+                    repeatCount,
+                    bodyLength: outerBodyIds.length,
+                    hasInnerRepeatBoxShape: innerRepeatIndex !== -1,
+                    hasIncrementAfterShape
+                };
+            });
+
+        return {
+            hasBoxInitialization,
+            flowLength: startSequence.length,
+            outerRepeats
+        };
     },
 
     repeatBodyMatchesBoxPolygon(repeatBlock, blockList, boxName) {

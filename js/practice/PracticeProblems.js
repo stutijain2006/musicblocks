@@ -215,6 +215,7 @@ export const PracticeProblems = [
         <li><b>forward</b></li>
         <li><b>right</b></li>
         <li><b>divide</b></li>
+        <li><b>add 1 to box1</b></li>
       </ul>
 
       <p><b>Your task:</b></p>
@@ -229,17 +230,21 @@ export const PracticeProblems = [
 
       <p><b>Hint:</b> first make one shape work with <b>box1</b>. After that, you can repeat the idea and change the value in <b>box1</b> to create many different shapes.</p>
 
-      <p><b>To complete this level, your code must do all of these things:</b></p>
+      <p><b>Extra hint for one automatic shape generator:</b></p>
+
+      <p>Use only <b>one Start block</b>. First store a starting value like <b>3</b> in <b>box1</b>. Then use an <b>outer repeat</b> with a normal number like <b>4</b> to decide how many shapes you want to draw. Inside that outer repeat, put your shape code with <b>repeat box1</b>, <b>forward 100</b>, and <b>right 360 / box1</b>. After the shape is finished, use <b>add 1 to box1</b> so the next shape has one more side.</p>
+
+      <p><b>To complete this level, make this automatic generator pattern:</b></p>
 
       <ol>
-        <li>Store a number in <b>box1</b>.</li>
-        <li>Use <b>box1</b> as the repeat count for drawing a shape.</li>
-        <li>Use <b>360 / box1</b> as the turning angle.</li>
-        <li>Use another repeat to make several shapes automatically.</li>
-        <li>Change <b>box1</b> after a shape is drawn so the next shape is different.</li>
+        <li>One <b>Start</b> block.</li>
+        <li>A block that stores a number in <b>box1</b>.</li>
+        <li>An <b>outer repeat</b> with a normal number such as 4.</li>
+        <li>Inside it, an <b>inner repeat box1</b> that draws the shape.</li>
+        <li>After that shape, an <b>add 1 to box1</b> block.</li>
       </ol>
 
-      <p><b>Level check:</b> the level will complete only when your project shows a shape generator that uses <b>box1</b> and automatically makes multiple different shapes.</p>
+      <p><b>Level check:</b> the level will complete only when your project shows one automatic shape generator that changes <b>box1</b> by itself and makes different shapes.</p>
     `,
         expected: {
             boxShapeAutomation: true
