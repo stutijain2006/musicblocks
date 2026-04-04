@@ -323,5 +323,59 @@ export const PracticeProblems = [
             cyclicWholeNote: true
         },
         badgeGroup: "geometry_rhythm"
+    },
+
+    {
+        level: 10,
+        title: "Pitch Over Time - Twinkle Twinkle with Phrase Maker",
+        description: `
+      <p>In this level, you will use <b>Phrase Maker</b> to explore <b>pitch over time</b>. That means you will think about how the melody moves up, down, or stays the same as time goes forward.</p>
+
+      <p>Before you start, sing or hear the shape of <b>Twinkle Twinkle Little Star</b> in your mind.</p>
+
+      <p><b>Reference tune in solfege:</b></p>
+
+      <ul>
+        <li><b>A1:</b> Do Do Sol Sol La La Sol</li>
+        <li><b>A2:</b> Fa Fa Mi Mi Re Re Do</li>
+        <li><b>B:</b> Sol Sol Fa Fa Mi Mi Re</li>
+      </ul>
+
+      <p><b>Whole song form:</b></p>
+
+      <p><b>A1 A2 B B A1 A2</b></p>
+
+      <p><b>You will already see these blocks on the screen:</b></p>
+
+      <ul>
+        <li><b>Start</b></li>
+        <li><b>Phrase Maker</b></li>
+      </ul>
+
+      <p><b>Your task:</b></p>
+
+      <ol>
+        <li>Open <b>Phrase Maker</b>.</li>
+        <li>Create the three melody parts of Twinkle Twinkle using the tune reference above.</li>
+        <li>Export each part as an <b>action block</b>.</li>
+        <li>Find the exported action blocks in the <b>Actions</b> palette.</li>
+        <li>Arrange those action blocks under the <b>Start</b> block in the full song order: <b>A1 A2 B B A1 A2</b>.</li>
+        <li>Press <b>Play</b> and check whether it sounds like Twinkle Twinkle Little Star.</li>
+      </ol>
+
+      <p><b>Hints:</b></p>
+
+      <ul>
+        <li>All the pitches can use octave <b>4</b>.</li>
+        <li>You can rename your exported action blocks if that helps you remember the form.</li>
+        <li>Think of the song like a sandwich: the <b>A</b> part is the bread on the outside, and the <b>B</b> part is in the middle.</li>
+      </ul>
+
+      <p><b>Level check:</b> the level will complete when your project shows Phrase Maker-generated action blocks for the Twinkle Twinkle melody parts and those exported actions are arranged under <b>Start</b> in the correct song form.</p>
+    `,
+        expected: {
+            twinklePhraseMaker: true
+        },
+        badgeGroup: "melody_basics"
     }
 ];

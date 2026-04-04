@@ -37,6 +37,10 @@ export const PracticeValidator = {
             return this.validateCyclicWholeNote();
         }
 
+        if (problem.expected?.twinklePhraseMaker) {
+            return this.validateTwinklePhraseMaker();
+        }
+
         if (problem.expected?.pattern) {
             return this.validatePattern(problem.expected.pattern);
         }
@@ -129,6 +133,54 @@ export const PracticeValidator = {
         return startBlocks.some(startBlock =>
             this.startBlockMatchesCyclicWholeNote(startBlock, blockList)
         );
+    },
+
+    validateTwinklePhraseMaker() {
+        const blockList = this.getBlockList();
+        if (!this.hasBlock(blockList, "matrix")) return false;
+
+        const expectedSections = {
+            A1: ["do4", "do4", "sol4", "sol4", "la4", "la4", "sol4"],
+            A2: ["fa4", "fa4", "mi4", "mi4", "re4", "re4", "do4"],
+            B: ["sol4", "sol4", "fa4", "fa4", "mi4", "mi4", "re4"]
+        };
+
+        const actionSectionByName = new Map();
+        for (const block of Object.values(blockList)) {
+            if (!block || block.trash || block.name !== "action") continue;
+
+            const actionName = this.getActionName(block, blockList);
+            const actionBodyStartId = this.getActionBodyStartId(block, blockList);
+            const pitchSequence = this.getPitchSequence(actionBodyStartId, blockList);
+            if (!actionName || pitchSequence.length === 0) continue;
+
+            for (const [sectionName, expectedSequence] of Object.entries(expectedSections)) {
+                if (this.pitchSequencesEqual(pitchSequence, expectedSequence)) {
+                    actionSectionByName.set(actionName, sectionName);
+                    break;
+                }
+            }
+        }
+
+        const hasAllSections = ["A1", "A2", "B"].every(requiredSection =>
+            Array.from(actionSectionByName.values()).includes(requiredSection)
+        );
+        if (!hasAllSections) return false;
+
+        const startBlock = Object.values(blockList).find(
+            block => block?.name === "start" && !block.trash
+        );
+        if (!startBlock) return false;
+
+        const actionReferences = this.extractPatternSequence(
+            startBlock.connections?.[1],
+            blockList
+        );
+        const sectionSequence = actionReferences.map(actionName =>
+            actionSectionByName.get(actionName)
+        );
+
+        return this.pitchSequencesEqual(sectionSequence, ["A1", "A2", "B", "B", "A1", "A2"]);
     },
 
     extractPatternSequence(startId, blockList) {
@@ -331,8 +383,15 @@ export const PracticeValidator = {
     },
 
     getActionBodyStartId(actionBlock, blockList) {
-        const hiddenBlock = blockList[actionBlock.connections?.[2]];
-        return hiddenBlock?.connections?.[1] || null;
+        const bodyStartId = actionBlock.connections?.[2];
+        const bodyStartBlock = blockList[bodyStartId];
+        if (!bodyStartBlock || bodyStartBlock.trash) return null;
+
+        if (bodyStartBlock.name === "hidden") {
+            return bodyStartBlock.connections?.[1] || null;
+        }
+
+        return bodyStartId;
     },
 
     getRhythmMakerActionNames(blockList) {
@@ -351,6 +410,27 @@ export const PracticeValidator = {
         }
 
         return exportedActions;
+    },
+
+    getPitchSequence(startId, blockList) {
+        const ids = this.collectSequence(startId, blockList);
+        const sequence = [];
+
+        for (const id of ids) {
+            const block = blockList[id];
+            if (!this.isNoteBlock(block)) continue;
+
+            const pitch = this.findPitch(block, blockList);
+            if (pitch) {
+                sequence.push(pitch.toLowerCase());
+            }
+        }
+
+        return sequence;
+    },
+
+    pitchSequencesEqual(a, b) {
+        return JSON.stringify(a) === JSON.stringify(b);
     },
 
     actionLooksLikeRhythmMakerExport(startId, blockList) {
@@ -478,7 +558,11 @@ export const PracticeValidator = {
                 const innerRepeatIndex = outerBodyIds.findIndex(
                     bodyId =>
                         blockList[bodyId]?.name === "repeat" &&
-                        this.isBoxReference(blockList[bodyId]?.connections?.[1], blockList, "box1") &&
+                        this.isBoxReference(
+                            blockList[bodyId]?.connections?.[1],
+                            blockList,
+                            "box1"
+                        ) &&
                         this.repeatBodyMatchesBoxPolygon(blockList[bodyId], blockList, "box1")
                 );
 
