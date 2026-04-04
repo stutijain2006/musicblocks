@@ -89,12 +89,21 @@ function setupBoxesBlocks(activity) {
             const i = args.length === 2 ? args[1] : 1;
 
             if (args.length > 0) {
-                const cblk = activity.blocks.blockList[blk].connections[1];
+                const blockEntry = activity.blocks.blockList[blk];
+                const cblk = blockEntry?.connections?.[1];
+                const connectedBlock = cblk !== null && cblk !== undefined
+                    ? activity.blocks.blockList[cblk]
+                    : null;
 
-                if (activity.blocks.blockList[cblk].name === "text") {
+                if (args[0] === null || args[0] === undefined || !connectedBlock) {
+                    activity.errorMsg(NOINPUTERRORMSG, blk);
+                    return;
+                }
+
+                if (connectedBlock.name === "text") {
                     // Work-around to #1302
                     // Look for a namedbox with this text value.
-                    const name = activity.blocks.blockList[cblk].value;
+                    const name = connectedBlock.value;
                     if (name in logo.boxes) {
                         logo.boxes[name] = logo.boxes[name] + i;
                         return;
@@ -104,8 +113,8 @@ function setupBoxesBlocks(activity) {
                 let value = args[0] + i;
 
                 // A special case for solfege stored in boxes.
-                if (activity.blocks.blockList[cblk].name === "namedbox") {
-                    let j = SOLFEGENAMES.indexOf(activity.blocks.blockList[cblk].value);
+                if (connectedBlock.name === "namedbox") {
+                    let j = SOLFEGENAMES.indexOf(connectedBlock.value);
                     if (j !== -1) {
                         j = j >= SOLFEGENAMES.length ? 0 : j;
                         value = SOLFEGENAMES[j + i];

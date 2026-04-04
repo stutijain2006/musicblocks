@@ -66,6 +66,7 @@ export const PracticeUI = {
             8: "polyrhythm_level8.tb",
             9: "circular_rhythm_level9.tb",
             10: "twinkle_level10_starter.tb",
+
         };
 
         const file = projectFiles[level];
@@ -135,7 +136,15 @@ export const PracticeUI = {
                 const btn = document.querySelector(`.level-btn[data-level="${problem.level}"]`);
                 if (btn) btn.classList.add("done");
             } else {
-                alert("Not complete yet. Try again.");
+                if (problem.expected?.boxShapeAutomation) {
+                    const debug = PracticeValidator.getBoxShapeAutomationDebug();
+                    console.debug("Level 6 validation debug", debug);
+                    alert(
+                        "Not complete yet. Use one Start block with: store in box1, an outer repeat, an inner repeat box1 that draws the shape, and add 1 to box1 after the shape. Open the console to see Level 6 validation debug."
+                    );
+                } else {
+                    alert("Not complete yet. Try again.");
+                }
             }
         };
     }

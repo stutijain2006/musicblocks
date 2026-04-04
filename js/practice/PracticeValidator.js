@@ -79,6 +79,10 @@ if (problem.expected?.boxShapeAutomation) {
             return this.validateTwinklePhraseMaker();
         }
 
+        if (problem.expected?.twinklePhraseMaker) {
+            return this.validateTwinklePhraseMaker();
+        }
+
         if (problem.expected?.pattern) {
             return this.validatePattern(problem.expected.pattern);
         }
