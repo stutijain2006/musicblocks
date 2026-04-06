@@ -182,5 +182,11 @@ export default [
         languageOptions: {
             sourceType: "module"
         }
+    },
+    {
+        files: ["js/badges/**/*.js"],
+        languageOptions: {
+            sourceType: "module"
+        }
     }
 ];

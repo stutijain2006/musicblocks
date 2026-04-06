@@ -31,7 +31,7 @@
         "@babel/preset-env": "^7.28.5",
         "cross-env": "^7.0.3",
         "cypress": "^15.9.0",
-        "electron": "40.0.0",
+        "electron": "^40.8.5",
         "electron-builder": "26.8.1",
         "eslint": "^9.0.0",
         "eslint-config-prettier": "^9.0.0",
@@ -52,19 +52,22 @@
         "@tonejs/midi": "^2.0.28",
         "autoprefixer": "^10.4.16",
         "compression": "^1.8.1",
-        "cssnano": "^7.1.2",
-        "express": "5.2.1",
+        "cssnano": "^6.0.1",
+        "express": "^4.21.2",
         "gulp-concat": "^2.6.1",
-        "gulp-postcss": "^10.0.0",
-        "gulp-replace": "^1.1.4",
-        "gulp-sass": "^6.0.1",
-        "gulp-sourcemaps": "^3.0.0",
+        "gulp-postcss": "^9.0.1",
+        "gulp-replace": "^1.0.0",
+        "gulp-sass": "^5.1.0",
+        "gulp-sourcemaps": "^2.6.5",
         "http-server": "^14.1.1",
         "i18next": "^25.3.2",
         "i18next-http-backend": "^3.0.2",
-        "postcss": "^8.5.6",
-        "sass": "^1.97.2",
-        "tone": "^15.1.22"
+        "tone": "^15.1.22",
+        "lodash": "^4.17.21",
+        "qs": "^6.14.2",
+        "svgo": "^4.0.1",
+        "yaml": "^2.8.3",
+        "path-to-regexp": "0.1.13"
     },
     "build": {
         "appId": "com.musicblocks.app",
@@ -84,10 +87,20 @@
         "tar": "^7.5.10",
         "ajv": "^6.14.0",
         "@isaacs/brace-expansion": "^5.0.1",
+        "brace-expansion": "^1.1.12",
         "immutable": "^5.1.5",
-        "svgo": "^4.0.1",
         "@gulp-sourcemaps/identity-map": {
             "postcss": "^8.4.31"
+        },
+        "async": "3.2.6",
+        "portfinder": "1.0.32",
+
+        "express": {
+            "path-to-regexp": "0.1.13",
+            "qs": "6.14.2"
+        },
+        "body-parser": {
+            "qs": "6.14.2"
         }
     },
     "lint-staged": {
