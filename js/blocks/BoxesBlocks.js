@@ -91,9 +91,8 @@ function setupBoxesBlocks(activity) {
             if (args.length > 0) {
                 const blockEntry = activity.blocks.blockList[blk];
                 const cblk = blockEntry?.connections?.[1];
-                const connectedBlock = cblk !== null && cblk !== undefined
-                    ? activity.blocks.blockList[cblk]
-                    : null;
+                const connectedBlock =
+                    cblk !== null && cblk !== undefined ? activity.blocks.blockList[cblk] : null;
 
                 if (args[0] === null || args[0] === undefined || !connectedBlock) {
                     activity.errorMsg(NOINPUTERRORMSG, blk);

@@ -12,7 +12,7 @@ function getActivity() {
         }
     }
 
-    return null; 
+    return null;
 }
 
 export const PracticeValidator = {
@@ -21,30 +21,27 @@ export const PracticeValidator = {
         const activity = getActivity();
         if (!activity) return false;
 
-       if (problem.expected?.rhythmMakerWorkflow) {
-    if (!this.validateRhythmMakerWorkflow()) return false;
-}
+        if (problem.expected?.rhythmMakerWorkflow) {
+            if (!this.validateRhythmMakerWorkflow()) return false;
+        }
 
-    if (problem.expected?.phraseMakerWorkflow) {
-        if (!this.validatePhraseMakerWorkflow()) 
-        return false;
-    }
-    if (problem.expected?.twoPartForm) {
-        if (!this.validateTwoPartForm()) return false;
-    }
-if (problem.expected?.basicShapeSet) {
-    if (!this.validateBasicShapeSet()) return false;
-}
+        if (problem.expected?.phraseMakerWorkflow) {
+            if (!this.validatePhraseMakerWorkflow()) return false;
+        }
+        if (problem.expected?.twoPartForm) {
+            if (!this.validateTwoPartForm()) return false;
+        }
+        if (problem.expected?.basicShapeSet) {
+            if (!this.validateBasicShapeSet()) return false;
+        }
 
-if (problem.expected?.boxShapeAutomation) {
-    if (!this.validateBoxShapeAutomation()) return false;
-}
+        if (problem.expected?.boxShapeAutomation) {
+            if (!this.validateBoxShapeAutomation()) return false;
+        }
 
-
-        
         if (problem.expected?.cyclicWholeNote) {
-    if (!this.validateCyclicWholeNote()) return false;
-}
+            if (!this.validateCyclicWholeNote()) return false;
+        }
 
         if (problem.expected?.polyrhythm) {
             if (!this.validatePolyrhythm()) return false;
@@ -70,7 +67,7 @@ if (problem.expected?.boxShapeAutomation) {
         }
         if (problem.expected?.modArithmetic) {
             if (!this.validateModArithmetic()) return false;
-        } 
+        }
         if (problem.expected?.clickToggle) {
             if (!this.validateClickToggle()) return false;
         }
@@ -123,125 +120,117 @@ if (problem.expected?.boxShapeAutomation) {
     },
 
     validatePhraseMakerWorkflow() {
-    const blockList = this.getBlockList();
+        const blockList = this.getBlockList();
 
-    const exportedActions = new Set();
-    for (const block of Object.values(blockList)) {
-        if (!block || block.trash || block.name !== "action") continue;
-        const actionName = this.getActionName(block, blockList);
-        const firstBodyId = this.getActionBodyStartId(block, blockList);
-        if (!actionName || !firstBodyId) continue;
+        const exportedActions = new Set();
+        for (const block of Object.values(blockList)) {
+            if (!block || block.trash || block.name !== "action") continue;
+            const actionName = this.getActionName(block, blockList);
+            const firstBodyId = this.getActionBodyStartId(block, blockList);
+            if (!actionName || !firstBodyId) continue;
 
-        const bodyIds = this.collectSequence(firstBodyId, blockList);
-       const hasDrum = bodyIds.some(id => blockList[id]?.name === "playdrum");
-if (hasDrum) exportedActions.add(actionName);
-    }
-    if (exportedActions.size === 0) return false;
+            const bodyIds = this.collectSequence(firstBodyId, blockList);
+            const hasDrum = bodyIds.some(id => blockList[id]?.name === "playdrum");
+            if (hasDrum) exportedActions.add(actionName);
+        }
+        if (exportedActions.size === 0) return false;
 
-    const referencedActions = this.getStartActionReferences(blockList);
-    for (const name of referencedActions) {
-        if (exportedActions.has(name)) return true;
-    }
-    return false;
-},
-validateTwoPartForm() {
-    const blockList = this.getBlockList();
+        const referencedActions = this.getStartActionReferences(blockList);
+        for (const name of referencedActions) {
+            if (exportedActions.has(name)) return true;
+        }
+        return false;
+    },
+    validateTwoPartForm() {
+        const blockList = this.getBlockList();
 
-    const actionBlocks = Object.values(blockList).filter(
-        b => b && !b.trash && b.name === "action"
-    );
-    if (actionBlocks.length < 2) return false;
-
-    const referencedActions = this.getStartActionReferences(blockList);
-    if (referencedActions.size < 2) return false;
-
-    return true;
-},
-validatePolyrhythm() {
-    const blockList = this.getBlockList();
-
-    const divisorsFound = new Set();
-    for (const block of Object.values(blockList)) {
-        if (!block || block.trash || block.name !== "rhythm2") continue;
-
-        const divideBlock = blockList[block.connections?.[2]];
-        if (!divideBlock || divideBlock.name !== "divide") continue;
-
-        const denominator = this.getNumericValue(
-            divideBlock.connections?.[2], blockList
+        const actionBlocks = Object.values(blockList).filter(
+            b => b && !b.trash && b.name === "action"
         );
-        if (denominator === 2 || denominator === 3) {
-            divisorsFound.add(denominator);
+        if (actionBlocks.length < 2) return false;
+
+        const referencedActions = this.getStartActionReferences(blockList);
+        if (referencedActions.size < 2) return false;
+
+        return true;
+    },
+    validatePolyrhythm() {
+        const blockList = this.getBlockList();
+
+        const divisorsFound = new Set();
+        for (const block of Object.values(blockList)) {
+            if (!block || block.trash || block.name !== "rhythm2") continue;
+
+            const divideBlock = blockList[block.connections?.[2]];
+            if (!divideBlock || divideBlock.name !== "divide") continue;
+
+            const denominator = this.getNumericValue(divideBlock.connections?.[2], blockList);
+            if (denominator === 2 || denominator === 3) {
+                divisorsFound.add(denominator);
+            }
         }
-    }
 
-    return divisorsFound.has(2) && divisorsFound.has(3);
-},
+        return divisorsFound.has(2) && divisorsFound.has(3);
+    },
 
-   validateAvatarAnimation() {
-    const blockList = this.getBlockList();
-    return Object.values(blockList).some(
-        b => b && !b.trash && (b.name === "avatar" || b.name === "turtleshell")
-    );
-},
+    validateAvatarAnimation() {
+        const blockList = this.getBlockList();
+        return Object.values(blockList).some(
+            b => b && !b.trash && (b.name === "avatar" || b.name === "turtleshell")
+        );
+    },
 
-validateOnEveryNoteDo() {
-    const blockList = this.getBlockList();
-    return Object.values(blockList).some(
-        b => b && !b.trash && (b.name === "oneverynotedo" || b.name === "everynotedo")
-    );
-},
-validateRhythmRuler() {
-    const blockList = this.getBlockList();
+    validateOnEveryNoteDo() {
+        const blockList = this.getBlockList();
+        return Object.values(blockList).some(
+            b => b && !b.trash && (b.name === "oneverynotedo" || b.name === "everynotedo")
+        );
+    },
+    validateRhythmRuler() {
+        const blockList = this.getBlockList();
 
-    const exportedActions = new Set();
-    for (const block of Object.values(blockList)) {
-        if (!block || block.trash || block.name !== "action") continue;
-        const actionName = this.getActionName(block, blockList);
-        const firstBodyId = this.getActionBodyStartId(block, blockList);
-        if (!actionName || !firstBodyId) continue;
+        const exportedActions = new Set();
+        for (const block of Object.values(blockList)) {
+            if (!block || block.trash || block.name !== "action") continue;
+            const actionName = this.getActionName(block, blockList);
+            const firstBodyId = this.getActionBodyStartId(block, blockList);
+            if (!actionName || !firstBodyId) continue;
 
-        if (this.actionLooksLikeRhythmMakerExport(firstBodyId, blockList)) {
-            exportedActions.add(actionName);
+            if (this.actionLooksLikeRhythmMakerExport(firstBodyId, blockList)) {
+                exportedActions.add(actionName);
+            }
         }
-    }
 
-    return exportedActions.size >= 2;
-},
-validateBroadcastEvents() {
-    const blockList = this.getBlockList();
-    return Object.values(blockList).some(
-        b => b && !b.trash && (b.name === "broadcast" || b.name === "broadcastmsg")
-    );
-},
+        return exportedActions.size >= 2;
+    },
+    validateBroadcastEvents() {
+        const blockList = this.getBlockList();
+        return Object.values(blockList).some(
+            b => b && !b.trash && (b.name === "broadcast" || b.name === "broadcastmsg")
+        );
+    },
 
-validateConductorMouse() {
-    const blockList = this.getBlockList();
-    return Object.values(blockList).some(
-        b => b && !b.trash && b.name === "arc"
-    );
-},
+    validateConductorMouse() {
+        const blockList = this.getBlockList();
+        return Object.values(blockList).some(b => b && !b.trash && b.name === "arc");
+    },
 
-validateDrumMiceCircle() {
-    const blockList = this.getBlockList();
-    return Object.values(blockList).some(
-        b => b && !b.trash && b.name === "setxy"
-    );
-},
+    validateDrumMiceCircle() {
+        const blockList = this.getBlockList();
+        return Object.values(blockList).some(b => b && !b.trash && b.name === "setxy");
+    },
 
-validateModArithmetic() {
-    const blockList = this.getBlockList();
-    return Object.values(blockList).some(
-        b => b && !b.trash && b.name === "mod"
-    );
-},
+    validateModArithmetic() {
+        const blockList = this.getBlockList();
+        return Object.values(blockList).some(b => b && !b.trash && b.name === "mod");
+    },
 
-validateClickToggle() {
-    const blockList = this.getBlockList();
-    return Object.values(blockList).some(
-        b => b && !b.trash && (b.name === "storein" || b.name === "storein2")
-    );
-},
+    validateClickToggle() {
+        const blockList = this.getBlockList();
+        return Object.values(blockList).some(
+            b => b && !b.trash && (b.name === "storein" || b.name === "storein2")
+        );
+    },
 
     validateRhythmMakerWorkflow() {
         const blockList = this.getBlockList();
@@ -514,7 +503,6 @@ validateClickToggle() {
 
         return `${pitchName}${octave}`;
     },
-    
 
     validateBasic(problem) {
         const blockList = this.getBlockList();

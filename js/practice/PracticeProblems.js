@@ -140,11 +140,11 @@ export const PracticeProblems = [
         },
         badgeGroup: "rhythm_basics"
     },
-    
- {
-    level: 4,
-    title: "Chest, Snap, Clap – Build the Rhythm",
-    description: `
+
+    {
+        level: 4,
+        title: "Chest, Snap, Clap – Build the Rhythm",
+        description: `
     <p><b>Chest, Snap, Clap</b> is a fun rhythm you can perform on your own body no drums needed!</p>
 
     <p>You will transcribe and recreate this rhythm using Music Blocks' <b>Phrase Maker</b>.</p>
@@ -180,16 +180,15 @@ export const PracticeProblems = [
 
     <p><b>Level check:</b> your project should express the two-part form using Action blocks from Phrase Maker, looped with a repeat block.</p>
     `,
-    image: "images/practice/Level4.webp",
-    expected: {
-        blocks: ["repeat", "playdrum"],
-        phraseMakerWorkflow: true,
-        twoPartForm: true,
-        minNotes: 6
+        image: "images/practice/Level4.webp",
+        expected: {
+            blocks: ["repeat", "playdrum"],
+            phraseMakerWorkflow: true,
+            twoPartForm: true,
+            minNotes: 6
+        },
+        badgeGroup: "rhythm_basics"
     },
-    badgeGroup: "rhythm_basics"
-}
-,
 
     {
         level: 5,
@@ -375,9 +374,9 @@ export const PracticeProblems = [
         badgeGroup: "geometry_rhythm"
     },
     {
-    level: 8,
-    title: "Animated Polyrhythms",
-    description: `
+        level: 8,
+        title: "Animated Polyrhythms",
+        description: `
     <p><b>Polyrhythm</b> means playing two different rhythms together at the same time.</p>
 
     <p>In this activity, you will create polyrhythms and visualize them using animations.</p>
@@ -411,18 +410,18 @@ export const PracticeProblems = [
 
     <p><b>Level check:</b> your project should include two different rhythms (divisor 2 & 3) playing together, with animation using avatars and <b>On-every-note-do</b>.</p>
     `,
-    expected: {
-        polyrhythm: true,
-        avatarAnimation: true,
-        onEveryNoteDo: true,
-        rhythmRuler: true
+        expected: {
+            polyrhythm: true,
+            avatarAnimation: true,
+            onEveryNoteDo: true,
+            rhythmRuler: true
+        },
+        badgeGroup: "polyrhythm"
     },
-    badgeGroup: "polyrhythm"
-},
-{
-    level: 9,
-    title: "Circular Rhythm Maker – Broadcast & Events",
-    description: `
+    {
+        level: 9,
+        title: "Circular Rhythm Maker – Broadcast & Events",
+        description: `
     <p><b>Broadcast</b> is a way for one part of a program to send a signal to another part. In music, think of it like a conductor calling out each beat and each drummer listening for their cue.</p>
 
     <p>In this activity, you will build a <b>Circular Rhythm Maker</b> using mice, events, and broadcast just like the conductor circle from the lesson.</p>
@@ -458,15 +457,15 @@ export const PracticeProblems = [
 
     <p><b>Level check:</b> your project should have a conductor mouse broadcasting events to drum mice arranged in a circle, with clickable drums that toggle their sound using boxes and the <b>1 minus</b> trick.</p>
     `,
-    expected: {
-        broadcastEvents: true,
-        conductorMouse: true,
-        drumMiceCircle: true,
-        modArithmetic: true,
-        clickToggle: true
+        expected: {
+            broadcastEvents: true,
+            conductorMouse: true,
+            drumMiceCircle: true,
+            modArithmetic: true,
+            clickToggle: true
+        },
+        badgeGroup: "events_broadcast"
     },
-    badgeGroup: "events_broadcast"
-},
 
     {
         level: 10,
@@ -521,6 +520,4 @@ export const PracticeProblems = [
         },
         badgeGroup: "melody_basics"
     }
-,
-
 ];
