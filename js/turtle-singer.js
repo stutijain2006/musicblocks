@@ -737,20 +737,20 @@ class Singer {
         }
         const turtleList = activity.turtles.turtleList;
         for (let i = 0, turtleCount = turtleList.length; i < turtleCount; i++) {
-          const turtle = turtleList[i];
-          const synthVolume = turtle.singer.synthVolume;
-          const synthKeys = Object.keys(synthVolume);
+            const turtle = turtleList[i];
+            const synthVolume = turtle.singer.synthVolume;
+            const synthKeys = Object.keys(synthVolume);
 
-          for (let j = 0, synthCount = synthKeys.length; j < synthCount; j++) {
-              const synth = synthKeys[j];
-              const arr = synthVolume[synth];
-              if (arr.length > 0) {
-                  arr[arr.length - 1] = volume;
-              } else {
-                  arr.push(volume);
-              }
-          }
-      }
+            for (let j = 0, synthCount = synthKeys.length; j < synthCount; j++) {
+                const synth = synthKeys[j];
+                const arr = synthVolume[synth];
+                if (arr.length > 0) {
+                    arr[arr.length - 1] = volume;
+                } else {
+                    arr.push(volume);
+                }
+            }
+        }
     }
 
     /**
