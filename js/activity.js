@@ -90,6 +90,7 @@ let MYDEFINES = [
     // on demand when the widget is opened, saving ~3-5 MB of heap memory.
     // "Chart",
     "utils/utils",
+    "utils/retryWithBackoff",
     "activity/artwork",
     "widgets/status",
     "utils/munsell",
@@ -1826,7 +1827,7 @@ class Activity {
                         const protoblk = obj[0];
                         const paletteName = obj[1];
                         const protoName = obj[2];
-                        // eslint-disable-next-line no-prototype-builtins
+
                         if (that.blocks.protoBlockDict.hasOwnProperty(protoName)) {
                             that.palettes.dict[paletteName].makeBlockFromSearch(
                                 protoblk,
@@ -2267,6 +2268,10 @@ class Activity {
                     helpfulWheelDiv.style.display = "none";
                     this.__tick();
                 }
+
+                if (this.cleanupIdleWatcher) {
+                    this.cleanupIdleWatcher();
+                }
             };
 
             if (skipConfirmation) {
@@ -2643,7 +2648,7 @@ class Activity {
                         const stream = await recordScreen();
                         const mimeType = "video/webm";
                         mediaRecorder = createRecorder(stream, mimeType);
-                        if (flag == 1) {
+                        if (flag === 1) {
                             start.removeEventListener("click", handler);
                             // Add stop handler
                             const stopHandler = function stopHandler() {
@@ -2682,7 +2687,7 @@ class Activity {
             }
 
             // Start recording process if not already executing
-            if (flag == 0 && isExecuting) {
+            if (flag === 0 && isExecuting) {
                 recording();
                 start.dispatchEvent(clickEvent);
             }
@@ -2795,6 +2800,10 @@ class Activity {
                     }
                     break;
                 }
+            }
+
+            if (this.cleanupIdleWatcher) {
+                this.cleanupIdleWatcher();
             }
         };
 
@@ -3644,6 +3653,11 @@ class Activity {
             let lastActivity = Date.now();
             this.isAppIdle = false;
 
+            // Prevent duplicate intervals
+            if (this._idleWatcherIntervalId) {
+                clearInterval(this._idleWatcherIntervalId);
+            }
+
             // Wake up function - restores full framerate
             // Stored as instance property for cleanup
             this._resetIdleTimer = () => {
@@ -4293,9 +4307,9 @@ class Activity {
             }
             if (
                 (event.altKey && !disableKeys) ||
-                event.keyCode == 13 ||
-                event.key == "/" ||
-                event.key == "\\"
+                event.keyCode === 13 ||
+                event.key === "/" ||
+                event.key === "\\"
             ) {
                 switch (event.keyCode) {
                     case 66: // 'B'
@@ -4360,9 +4374,9 @@ class Activity {
                         break;
                     case 191:
                         if (
-                            event.key == "/" &&
+                            event.key === "/" &&
                             !this.beginnerMode &&
-                            disableHorizScrollIcon.style.display == "block"
+                            disableHorizScrollIcon.style.display === "block"
                         ) {
                             this.blocksContainer.x += this.canvas.width / 10;
                             this.stageDirty = true;
@@ -4370,9 +4384,9 @@ class Activity {
                     // fall through
                     case 220:
                         if (
-                            event.key == "\\" &&
+                            event.key === "\\" &&
                             !this.beginnerMode &&
-                            disableHorizScrollIcon.style.display == "block"
+                            disableHorizScrollIcon.style.display === "block"
                         ) {
                             this.blocksContainer.x -= this.canvas.width / 10;
                             this.stageDirty = true;
@@ -5951,7 +5965,7 @@ class Activity {
                                     blockId + 13,
                                     [
                                         "modename",
-                                        { value: staff.key.mode == "m" ? "minor" : "major" }
+                                        { value: staff.key.mode === "m" ? "minor" : "major" }
                                     ],
                                     0,
                                     0,
@@ -6038,7 +6052,7 @@ class Activity {
 
                         // Update the namedo block if not first
                         // nameddo block appear
-                        if (staffBlocksMap[lineId].baseBlocks.length != 0) {
+                        if (staffBlocksMap[lineId].baseBlocks.length !== 0) {
                             staffBlocksMap[lineId].baseBlocks[
                                 staffBlocksMap[lineId].baseBlocks.length - 1
                             ][0][
@@ -6135,7 +6149,7 @@ class Activity {
                     ][0];
                 const repeatblockids = staffBlocksMap[staffIndex].repeatArray;
                 for (const repeatId of repeatblockids) {
-                    if (repeatId.start == 0) {
+                    if (repeatId.start === 0) {
                         staffBlocksMap[staffIndex].repeatBlock.push([
                             blockId,
                             "repeat",
@@ -6191,7 +6205,7 @@ class Activity {
                                 ]
                             );
 
-                            if (secondnammedo != -1) {
+                            if (secondnammedo !== -1) {
                                 staffBlocksMap[staffIndex].baseBlocks[repeatId.end + 1][0][
                                     secondnammedo
                                 ][4][0] = blockId;
@@ -6262,7 +6276,7 @@ class Activity {
                             100,
                             [blockId]
                         ]);
-                        if (prevnameddo != -1) {
+                        if (prevnameddo !== -1) {
                             staffBlocksMap[staffIndex].baseBlocks[repeatId.start - 1][0][
                                 prevnameddo
                             ][4][1] = blockId;
@@ -8717,13 +8731,13 @@ class Activity {
                 if (files[0] !== undefined) {
                     const extension = files[0].name.split(".").pop().toLowerCase(); //file extension from input file
 
-                    const isMidi = extension == "mid" || extension == "midi";
+                    const isMidi = extension === "mid" || extension === "midi";
                     if (isMidi) {
                         midiReader.readAsArrayBuffer(files[0]);
                         return;
                     }
 
-                    const isABC = extension == "abc";
+                    const isABC = extension === "abc";
                     if (isABC) {
                         abcReader.readAsText(files[0]);
                         return;
