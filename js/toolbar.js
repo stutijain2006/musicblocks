@@ -59,7 +59,9 @@ class Toolbar {
                 ["planetIcon", _("Find and share projects")],
                 ["planetIconDisabled", _("Offline. Sharing is unavailable")],
                 ["toggleAuxBtn", _("Auxiliary menu")],
-                ["helpIcon", _("Help")],
+                ["helpIcon", _("Help and shortcuts")],
+                ["helpGuideItem", _("Help"), "innerHTML"],
+                ["shortcutsGuideItem", _("Keyboard shortcuts"), "innerHTML"],
                 ["runSlowlyIcon", _("Run slowly")],
                 ["runStepByStepIcon", _("Run step by step")],
                 ["displayStatsIcon", _("Display statistics")],
@@ -73,7 +75,6 @@ class Toolbar {
                 ["highcontrast", _("High Contrast Mode")],
                 ["mergeWithCurrentIcon", _("Merge with current project")],
                 ["chooseKeyIcon", _("Set Pitch Preview")],
-                ["keyboardShortcutsIcon", _("Keyboard shortcuts")],
                 ["toggleJavaScriptIcon", _("JavaScript Editor")],
                 ["restoreIcon", _("Restore")],
                 ["beginnerMode", _("Switch to beginner mode")],
@@ -130,7 +131,9 @@ class Toolbar {
                 _("Find and share projects"),
                 _("Offline. Sharing is unavailable"),
                 _("Auxiliary menu"),
+                _("Help and shortcuts"),
                 _("Help"),
+                _("Keyboard shortcuts"),
                 _("Run slowly"),
                 _("Run step by step"),
                 _("Display statistics"),
@@ -144,7 +147,6 @@ class Toolbar {
                 _("High Contrast Mode"),
                 _("Merge with current project"),
                 _("Set Pitch Preview"),
-                _("Keyboard shortcuts"),
                 _("JavaScript Editor"),
                 _("Restore"),
                 _("Switch to beginner mode"),
@@ -205,7 +207,9 @@ class Toolbar {
                 ["planetIcon", _("Find and share projects")],
                 ["planetIconDisabled", _("Offline. Sharing is unavailable")],
                 ["toggleAuxBtn", _("Auxiliary menu")],
-                ["helpIcon", _("Help")],
+                ["helpIcon", _("Help and shortcuts")],
+                ["helpGuideItem", _("Help"), "innerHTML"],
+                ["shortcutsGuideItem", _("Keyboard shortcuts"), "innerHTML"],
                 ["runSlowlyIcon", _("Run slowly")],
                 ["runStepByStepIcon", _("Run step by step")],
                 ["displayStatsIcon", _("Display statistics")],
@@ -218,7 +222,6 @@ class Toolbar {
                 ["dark", _("Dark Mode")],
                 ["highcontrast", _("High Contrast Mode")],
                 ["mergeWithCurrentIcon", _("Merge with current project")],
-                ["keyboardShortcutsIcon", _("Keyboard shortcuts")],
                 ["toggleJavaScriptIcon", _("JavaScript Editor")],
                 ["restoreIcon", _("Restore")],
                 ["beginnerMode", _("Switch to beginner mode")],
@@ -270,7 +273,9 @@ class Toolbar {
                 _("Find and share projects"),
                 _("Offline. Sharing is unavailable"),
                 _("Auxiliary menu"),
+                _("Help and shortcuts"),
                 _("Help"),
+                _("Keyboard shortcuts"),
                 _("Run slowly"),
                 _("Run step by step"),
                 _("Display statistics"),
@@ -283,7 +288,6 @@ class Toolbar {
                 _("Dark Mode"),
                 _("High Contrast Mode"),
                 _("Merge with current project"),
-                _("Keyboard shortcuts"),
                 _("JavaScript Editor"),
                 _("Restore"),
                 _("Switch to beginner mode"),
@@ -1099,12 +1103,26 @@ class Toolbar {
      * @param {Function} onclick - The onclick handler for the help icon.
      * @returns {void}
      */
-    renderHelpIcon(onclick) {
+    renderHelpIcon(onclick, shortcutsOnclick) {
         const helpIcon = docById("helpIcon");
+        const helpGuideItem = docById("helpGuideItem");
+        const shortcutsGuideItem = docById("shortcutsGuideItem");
 
-        helpIcon.onclick = () => {
-            onclick(this.activity);
-        };
+        if (helpGuideItem) {
+            helpGuideItem.onclick = event => {
+                event.preventDefault();
+                onclick(this.activity);
+            };
+        }
+
+        if (shortcutsGuideItem) {
+            shortcutsGuideItem.onclick = event => {
+                event.preventDefault();
+                shortcutsOnclick(this.activity);
+            };
+        }
+
+        void helpIcon;
     }
 
     /**
@@ -1386,6 +1404,10 @@ class Toolbar {
     renderKeyboardShortcutsIcon(onclick) {
         const keyboardShortcutsIcon = docById("keyboardShortcutsIcon");
 
+        if (!keyboardShortcutsIcon) {
+            return;
+        }
+
         keyboardShortcutsIcon.onclick = () => {
             onclick(this.activity);
         };
@@ -1579,7 +1601,7 @@ class Toolbar {
                 "#runSlowlyIcon, #runStepByStepIcon, #displayStatsIcon, " +
                 "#loadPluginIcon, #delPluginIcon, #enableHorizScrollIcon, " +
                 "#disableHorizScrollIcon, #themeSelectIcon, #mergeWithCurrentIcon, " +
-                "#wrapTurtle, #chooseKeyIcon, #keyboardShortcutsIcon, #toggleJavaScriptIcon, #restoreIcon, " +
+                "#wrapTurtle, #chooseKeyIcon, #toggleJavaScriptIcon, #restoreIcon, " +
                 "#beginnerMode, #advancedMode, #languageSelectIcon";
 
             const isVisible = btn => {

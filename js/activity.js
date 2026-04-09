@@ -7099,80 +7099,46 @@ class Activity {
             widgetWindow.show();
 
             const widgetBody = widgetWindow.getWidgetBody();
-            widgetBody.style.background = "linear-gradient(180deg, #f2f8ff 0%, #ffffff 100%)";
+            widgetBody.className = "wfbWidget keyboard-shortcuts-widget";
             widgetBody.style.padding = "0";
             widgetBody.style.display = "block";
-            widgetBody.style.height = "min(70vh, 640px)";
-            widgetBody.style.width = "min(72vw, 720px)";
+            widgetBody.style.height = "min(72vh, 680px)";
+            widgetBody.style.width = "min(68vw, 760px)";
             widgetBody.style.maxWidth = "100%";
             widgetBody.style.overflow = "hidden";
 
             const wrapper = document.createElement("div");
-            wrapper.style.boxSizing = "border-box";
-            wrapper.style.height = "100%";
-            wrapper.style.padding = "18px";
-            wrapper.style.overflowY = "auto";
-            wrapper.style.overflowX = "hidden";
-            wrapper.style.fontFamily = '"Fira Sans", sans-serif';
-            wrapper.style.color = "#17324d";
+            wrapper.className = "keyboard-shortcuts-panel";
 
             const intro = document.createElement("div");
-            intro.style.background = "#1e88e5";
-            intro.style.color = "white";
-            intro.style.borderRadius = "14px";
-            intro.style.padding = "14px 16px";
-            intro.style.marginBottom = "16px";
+            intro.className = "keyboard-shortcuts-hero";
             intro.innerHTML =
-                `<div style="font-size:18px;font-weight:700;">${_("Keyboard shortcuts")}</div>` +
-                `<div style="font-size:13px;opacity:0.92;margin-top:4px;">${_(
+                `<div class="keyboard-shortcuts-hero-title">${_("Keyboard shortcuts")}</div>` +
+                `<div class="keyboard-shortcuts-hero-copy">${_(
                     "Shortcuts are context-sensitive. Some only work when a related panel, widget, or mode is active. Windows/Linux and Mac equivalents are shown together."
                 )}</div>`;
             wrapper.appendChild(intro);
 
             shortcutSections.forEach(section => {
                 const sectionCard = document.createElement("section");
-                sectionCard.style.background = "white";
-                sectionCard.style.border = "1px solid #d7e6f6";
-                sectionCard.style.borderRadius = "14px";
-                sectionCard.style.padding = "14px 16px";
-                sectionCard.style.marginBottom = "12px";
-                sectionCard.style.boxShadow = "0 4px 14px rgba(20, 68, 112, 0.08)";
+                sectionCard.className = "keyboard-shortcuts-section";
 
                 const heading = document.createElement("div");
                 heading.textContent = section.title;
-                heading.style.fontSize = "15px";
-                heading.style.fontWeight = "700";
-                heading.style.marginBottom = "10px";
-                heading.style.color = "#125a9c";
+                heading.className = "keyboard-shortcuts-section-title";
                 sectionCard.appendChild(heading);
 
                 section.items.forEach(item => {
                     const row = document.createElement("div");
-                    row.style.display = "grid";
-                    row.style.gridTemplateColumns = "minmax(140px, 220px) 1fr";
-                    row.style.gap = "12px";
-                    row.style.alignItems = "start";
-                    row.style.padding = "8px 0";
-                    row.style.borderTop = "1px solid #edf4fb";
+                    row.className = "keyboard-shortcuts-row";
 
                     const key = document.createElement("div");
                     key.textContent = item.keys;
-                    key.style.fontFamily = '"Fira Mono", monospace';
-                    key.style.fontSize = "12px";
-                    key.style.fontWeight = "700";
-                    key.style.whiteSpace = "pre-line";
-                    key.style.background = "#eef6ff";
-                    key.style.border = "1px solid #cde3fb";
-                    key.style.borderRadius = "14px";
-                    key.style.padding = "6px 10px";
-                    key.style.color = "#114a80";
-                    key.style.display = "inline-block";
+                    key.className = "keyboard-shortcuts-key";
 
                     const action = document.createElement("div");
                     action.textContent = item.action;
-                    action.style.fontSize = "13px";
-                    action.style.lineHeight = "1.45";
-                    action.style.color = "#284761";
+                    action.className = "keyboard-shortcuts-action";
 
                     row.appendChild(key);
                     row.appendChild(action);
@@ -7817,7 +7783,7 @@ class Activity {
             );
             this.toolbar.renderPlanetIcon(this.planet, doOpenSamples);
             this.toolbar.renderMenuIcon(showHideAuxMenu);
-            this.toolbar.renderHelpIcon(showHelp);
+            this.toolbar.renderHelpIcon(showHelp, showKeyboardShortcuts);
             this.toolbar.renderModeSelectIcon(
                 doSwitchMode,
                 () => doRecordButton(this),
@@ -7831,7 +7797,6 @@ class Activity {
             this.toolbar.renderThemeSelectIcon(this.themeBox, this.themes);
             this.toolbar.renderMergeIcon(_doMergeLoad);
             this.toolbar.renderRestoreIcon(restoreTrash);
-            this.toolbar.renderKeyboardShortcutsIcon(showKeyboardShortcuts);
             if (_THIS_IS_MUSIC_BLOCKS_) {
                 this.toolbar.renderChooseKeyIcon(chooseKeyMenu);
             }
