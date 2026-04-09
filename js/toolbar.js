@@ -1110,19 +1110,29 @@ class Toolbar {
 
         if (helpGuideItem) {
             helpGuideItem.onclick = event => {
-                event.preventDefault();
+                if (event) {
+                    event.preventDefault();
+                }
                 onclick(this.activity);
             };
         }
 
         if (shortcutsGuideItem) {
             shortcutsGuideItem.onclick = event => {
-                event.preventDefault();
-                shortcutsOnclick(this.activity);
+                if (event) {
+                    event.preventDefault();
+                }
+                if (shortcutsOnclick) {
+                    shortcutsOnclick(this.activity);
+                }
             };
         }
 
-        void helpIcon;
+        if (helpIcon) {
+            helpIcon.onclick = () => {
+                onclick(this.activity);
+            };
+        }
     }
 
     /**
