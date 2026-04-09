@@ -143,6 +143,6 @@ if (typeof module !== "undefined" && module.exports) {
         initBasicProtoBlocks,
         initCoreProtoBlocks,
         initAdvancedProtoBlocks,
-        BACKWARDCOMPATIBILIYDICT
+        BACKWARDCOMPATIBILITYDICT
     };
 }
