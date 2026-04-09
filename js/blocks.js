@@ -2234,30 +2234,30 @@ class Blocks {
                     }
 
                     this.blockList[newBlock].connections[newConnection] = thisBlock;
-                this.adjustDocks(newBlock, true);
+                    this.adjustDocks(newBlock, true);
 
-                // Graphical feedback for new connection
-                this.findDragGroup(thisBlock);
-                const blocksToHighlight = [...this.dragGroup];
-                if (this.blockList[newBlock]) {
-                    blocksToHighlight.push(newBlock);
-                }
-
-                blocksToHighlight.forEach(b => {
-                    if (this.blockList[b]) {
-                        this.blockList[b].highlight();
+                    // Graphical feedback for new connection
+                    this.findDragGroup(thisBlock);
+                    const blocksToHighlight = [...this.dragGroup];
+                    if (this.blockList[newBlock]) {
+                        blocksToHighlight.push(newBlock);
                     }
-                });
-                this.activity.refreshCanvas();
 
-                setTimeout(() => {
                     blocksToHighlight.forEach(b => {
                         if (this.blockList[b]) {
-                            this.blockList[b].unhighlight();
+                            this.blockList[b].highlight();
                         }
                     });
                     this.activity.refreshCanvas();
-                }, 500);
+
+                    setTimeout(() => {
+                        blocksToHighlight.forEach(b => {
+                            if (this.blockList[b]) {
+                                this.blockList[b].unhighlight();
+                            }
+                        });
+                        this.activity.refreshCanvas();
+                    }, 500);
 
                     /**
                      * Remove the silence block (if it is present) after
@@ -2678,8 +2678,7 @@ class Blocks {
                 myBlock.container.x += dx;
                 myBlock.container.y += dy;
 
-                if (this._
-                    > 0) {
+                if (this._ > 0) {
                     this._checkBoundsPending = true;
                 } else {
                     this.checkBounds();
