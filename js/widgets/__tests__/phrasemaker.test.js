@@ -668,7 +668,7 @@ describe("PhraseMaker Widget", () => {
 
         phraseMaker._deps.toFraction = jest.fn(v => v);
         phraseMaker.blockConnection = jest.fn();
-        jest.spyOn(global, "setTimeout").mockImplementation(fn => fn);
+        jest.spyOn(global, "setTimeout").mockImplementation(fn => fn());
 
         phraseMaker.activity = {
             blocks: {
@@ -1052,12 +1052,11 @@ describe("PhraseMaker Widget", () => {
                 loadNewBlocks: jest.fn()
             },
             refreshCanvas: jest.fn(),
+            textMsg: jest.fn(),
             logo: {
                 synth: { inTemperament: "custom" }
             }
         };
-
-        global.activity = { textMsg: jest.fn() };
 
         // RUN custom temperament first
         phraseMaker._deps.isCustomTemperament = jest.fn(() => true);
@@ -1095,12 +1094,11 @@ describe("PhraseMaker Widget", () => {
                 loadNewBlocks: jest.fn()
             },
             refreshCanvas: jest.fn(),
+            textMsg: jest.fn(),
             logo: {
                 synth: { inTemperament: "equal" }
             }
         };
-
-        global.activity = { textMsg: jest.fn() };
 
         phraseMaker._save();
 
@@ -1124,10 +1122,9 @@ describe("PhraseMaker Widget", () => {
                 loadNewBlocks: jest.fn()
             },
             refreshCanvas: jest.fn(),
+            textMsg: jest.fn(),
             logo: { synth: { inTemperament: "equal" } }
         };
-
-        global.activity = { textMsg: jest.fn() };
 
         phraseMaker._save();
     });
