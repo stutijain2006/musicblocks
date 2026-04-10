@@ -18,7 +18,7 @@
    HIDEBLOCKSBUTTON, LANGUAGEBUTTON, LOADBUTTON, MENUBUTTON,
    NEWBUTTON, PLANETBUTTON, PLUGINSDELETEBUTTON, RESTORETRASHBUTTON,
    RHYTHMPALETTEICON, RUNBUTTON, SAVEBUTTON, SCROLLUNLOCKBUTTON,
-   SHORTCUTSBUTTON, SLOWBUTTON, SMALLERBUTTON, STATSBUTTON,
+   TABBUTTON_LIGHT, TABBUTTON_DARK, SLOWBUTTON, SMALLERBUTTON, STATSBUTTON,
    STEPBUTTON, STOPTURTLEBUTTON, WRAPTURTLEBUTTON, _THIS_IS_TURTLE_BLOCKS_,
    _THIS_IS_MUSIC_BLOCKS_, MOUSEPALETTEICON, FULLSCREENBUTTON, RECORDBUTTON,
    PLUGINSBUTTON, OPENMERGEBUTTON, PITCHPREVIEWBUTTON, JAVASCRIPTBUTTON,
@@ -657,6 +657,19 @@ const createHelpContent = activity => {
         _("To extract a block, right-click on it. Then you will see the extract option"),
         "data:image/svg+xml;base64," + window.btoa(base64Encode(EXTRACTBUTTON))
     ]);
+    if (_THIS_IS_MUSIC_BLOCKS_) {
+        const tabButtonSvg =
+            activity.themebox && activity.themebox._theme === "dark"
+                ? TABBUTTON_DARK
+                : TABBUTTON_LIGHT;
+        HELPCONTENT.push([
+            _("Tab Navigation"),
+            _(
+                "Press the Tab key on your keyboard to magically jump between the workspace, toolbar, and palette!"
+            ),
+            "data:image/svg+xml;base64," + window.btoa(base64Encode(tabButtonSvg))
+        ]);
+    }
     if (!activity.beginnerMode) {
         HELPCONTENT.push([
             _("Contextual Menu for Canvas"),
