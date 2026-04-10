@@ -709,12 +709,37 @@ describe("Toolbar Class", () => {
             setAttribute: jest.fn(),
             onclick: null
         };
-        global.docById.mockReturnValue(helpIcon);
+        global.docById.mockImplementation(id => (id === "helpIcon" ? helpIcon : null));
         const mockOnClick = jest.fn();
         toolbar.renderHelpIcon(mockOnClick);
         expect(helpIcon.onclick).toBeInstanceOf(Function);
         helpIcon.onclick();
         expect(mockOnClick).toHaveBeenCalledWith(toolbar.activity);
+    });
+
+    test("renderHelpIcon leaves help icon as dropdown trigger when menu items exist", () => {
+        const helpIcon = {
+            setAttribute: jest.fn(),
+            onclick: "existing-handler"
+        };
+        const helpGuideItem = { onclick: null };
+        const shortcutsGuideItem = { onclick: null };
+
+        global.docById.mockImplementation(id => {
+            if (id === "helpIcon") return helpIcon;
+            if (id === "helpGuideItem") return helpGuideItem;
+            if (id === "shortcutsGuideItem") return shortcutsGuideItem;
+            return null;
+        });
+
+        const mockOnClick = jest.fn();
+        const mockShortcutsOnClick = jest.fn();
+
+        toolbar.renderHelpIcon(mockOnClick, mockShortcutsOnClick);
+
+        expect(helpIcon.onclick).toBeNull();
+        expect(helpGuideItem.onclick).toBeInstanceOf(Function);
+        expect(shortcutsGuideItem.onclick).toBeInstanceOf(Function);
     });
 
     test("renderModeSelectIcon handles mode switching and UI updates", () => {

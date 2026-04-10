@@ -360,10 +360,30 @@ class Toolbar {
             $j(this).tooltip("close");
         });
 
+        const restoreWidgetFocus = () => {
+            const focusedWindow = window.widgetWindows?.focused;
+            if (focusedWindow?.takeFocus) {
+                focusedWindow.takeFocus();
+                return;
+            }
+
+            const helpWindow = window.widgetWindows?.openWindows?.help;
+            if (helpWindow?.takeFocus) {
+                helpWindow.takeFocus();
+                return;
+            }
+
+            const shortcutsWindow = window.widgetWindows?.openWindows?.["keyboard-shortcuts"];
+            if (shortcutsWindow?.takeFocus) {
+                shortcutsWindow.takeFocus();
+            }
+        };
+
         $j(".materialize-iso, .dropdown-trigger").dropdown({
             constrainWidth: false,
             hover: false,
-            belowOrigin: true // Displays dropdown below the button
+            belowOrigin: true, // Displays dropdown below the button
+            onCloseEnd: restoreWidgetFocus
         });
 
         // Setup keyboard navigation for toolbar
@@ -1107,11 +1127,13 @@ class Toolbar {
         const helpIcon = docById("helpIcon");
         const helpGuideItem = docById("helpGuideItem");
         const shortcutsGuideItem = docById("shortcutsGuideItem");
+        const hasDropdownMenu = !!helpGuideItem || !!shortcutsGuideItem;
 
         if (helpGuideItem) {
             helpGuideItem.onclick = event => {
                 if (event) {
                     event.preventDefault();
+                    event.stopPropagation();
                 }
                 onclick(this.activity);
             };
@@ -1121,6 +1143,7 @@ class Toolbar {
             shortcutsGuideItem.onclick = event => {
                 if (event) {
                     event.preventDefault();
+                    event.stopPropagation();
                 }
                 if (shortcutsOnclick) {
                     shortcutsOnclick(this.activity);
@@ -1129,9 +1152,11 @@ class Toolbar {
         }
 
         if (helpIcon) {
-            helpIcon.onclick = () => {
-                onclick(this.activity);
-            };
+            helpIcon.onclick = hasDropdownMenu
+                ? null
+                : () => {
+                      onclick(this.activity);
+                  };
         }
     }
 
@@ -1328,10 +1353,30 @@ class Toolbar {
             }
 
             // Reinitialize dropdowns
+            const restoreWidgetFocus = () => {
+                const focusedWindow = window.widgetWindows?.focused;
+                if (focusedWindow?.takeFocus) {
+                    focusedWindow.takeFocus();
+                    return;
+                }
+
+                const helpWindow = window.widgetWindows?.openWindows?.help;
+                if (helpWindow?.takeFocus) {
+                    helpWindow.takeFocus();
+                    return;
+                }
+
+                const shortcutsWindow = window.widgetWindows?.openWindows?.["keyboard-shortcuts"];
+                if (shortcutsWindow?.takeFocus) {
+                    shortcutsWindow.takeFocus();
+                }
+            };
+
             $j(".materialize-iso, .dropdown-trigger").dropdown({
                 constrainWidth: false,
                 hover: false,
-                belowOrigin: true
+                belowOrigin: true,
+                onCloseEnd: restoreWidgetFocus
             });
 
             if (onclick) {

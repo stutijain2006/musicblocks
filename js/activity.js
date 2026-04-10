@@ -6913,6 +6913,9 @@ class Activity {
          * Shows help page
          */
         const showHelp = activity => {
+            if (window.widgetWindows?.isOpen("keyboard-shortcuts")) {
+                window.widgetWindows.clear("keyboard-shortcuts");
+            }
             activity._showHelp();
         };
 
@@ -6922,6 +6925,9 @@ class Activity {
         };
 
         const showKeyboardShortcuts = activity => {
+            if (window.widgetWindows?.isOpen("help")) {
+                window.widgetWindows.clear("help");
+            }
             activity._showKeyboardShortcuts();
         };
 
@@ -7015,6 +7021,10 @@ class Activity {
                 {
                     title: _("Navigation"),
                     items: [
+                        {
+                            keys: platformKeys("Tab / Shift + Tab", "Tab / Shift + Tab"),
+                            action: _("Move focus between the toolbar, palettes, and workspace")
+                        },
                         {
                             keys: platformKeys(_("Arrow keys"), _("Arrow keys")),
                             action: _(
