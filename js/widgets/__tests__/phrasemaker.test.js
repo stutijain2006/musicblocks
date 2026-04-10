@@ -279,6 +279,178 @@ describe("PhraseMaker Widget", () => {
         });
     });
 
+    describe("data management", () => {
+        test("should store row labels when pushed", () => {
+            phraseMaker.rowLabels.push("sol");
+            phraseMaker.rowLabels.push("mi");
+            expect(phraseMaker.rowLabels).toEqual(["sol", "mi"]);
+        });
+
+        test("should store row args when pushed", () => {
+            phraseMaker.rowArgs.push(4);
+            phraseMaker.rowArgs.push(5);
+            expect(phraseMaker.rowArgs).toEqual([4, 5]);
+        });
+
+        test("should track _rowBlocks", () => {
+            phraseMaker._rowBlocks.push(10);
+            phraseMaker._rowBlocks.push(20);
+            expect(phraseMaker._rowBlocks).toHaveLength(2);
+        });
+
+        test("should track _colBlocks", () => {
+            phraseMaker._colBlocks.push([1, 0]);
+            phraseMaker._colBlocks.push([2, 1]);
+            expect(phraseMaker._colBlocks).toHaveLength(2);
+        });
+
+        test("should store blockMap entries", () => {
+            phraseMaker._blockMap["0,0"] = true;
+            phraseMaker._blockMap["1,2"] = true;
+            expect(Object.keys(phraseMaker._blockMap)).toHaveLength(2);
+        });
+
+        test("should track lyrics", () => {
+            phraseMaker._lyrics.push("do");
+            phraseMaker._lyrics.push("re");
+            expect(phraseMaker._lyrics).toEqual(["do", "re"]);
+        });
+
+        test("should track _notesCounter", () => {
+            phraseMaker._notesCounter = 5;
+            expect(phraseMaker._notesCounter).toBe(5);
+        });
+    });
+
+    describe("state management", () => {
+        test("should toggle _stopOrCloseClicked", () => {
+            expect(phraseMaker._stopOrCloseClicked).toBe(false);
+            phraseMaker._stopOrCloseClicked = true;
+            expect(phraseMaker._stopOrCloseClicked).toBe(true);
+        });
+
+        test("should track sorted state", () => {
+            expect(phraseMaker.sorted).toBe(false);
+            phraseMaker.sorted = true;
+            expect(phraseMaker.sorted).toBe(true);
+        });
+
+        test("should update _matrixHasTuplets", () => {
+            expect(phraseMaker._matrixHasTuplets).toBe(false);
+            phraseMaker._matrixHasTuplets = true;
+            expect(phraseMaker._matrixHasTuplets).toBe(true);
+        });
+    });
+
+    describe("effects parameters", () => {
+        test("should allow updating vibrato parameters", () => {
+            phraseMaker.paramsEffects.doVibrato = true;
+            phraseMaker.paramsEffects.vibratoIntensity = 5;
+            phraseMaker.paramsEffects.vibratoFrequency = 10;
+            expect(phraseMaker.paramsEffects.doVibrato).toBe(true);
+            expect(phraseMaker.paramsEffects.vibratoIntensity).toBe(5);
+            expect(phraseMaker.paramsEffects.vibratoFrequency).toBe(10);
+        });
+
+        test("should allow updating distortion parameters", () => {
+            phraseMaker.paramsEffects.doDistortion = true;
+            phraseMaker.paramsEffects.distortionAmount = 40;
+            expect(phraseMaker.paramsEffects.doDistortion).toBe(true);
+            expect(phraseMaker.paramsEffects.distortionAmount).toBe(40);
+        });
+
+        test("should allow updating tremolo parameters", () => {
+            phraseMaker.paramsEffects.doTremolo = true;
+            phraseMaker.paramsEffects.tremoloFrequency = 5;
+            phraseMaker.paramsEffects.tremoloDepth = 50;
+            expect(phraseMaker.paramsEffects.doTremolo).toBe(true);
+            expect(phraseMaker.paramsEffects.tremoloDepth).toBe(50);
+        });
+
+        test("should allow updating chorus parameters", () => {
+            phraseMaker.paramsEffects.doChorus = true;
+            phraseMaker.paramsEffects.chorusRate = 0.5;
+            phraseMaker.paramsEffects.delayTime = 3.5;
+            phraseMaker.paramsEffects.chorusDepth = 70;
+            expect(phraseMaker.paramsEffects.doChorus).toBe(true);
+            expect(phraseMaker.paramsEffects.chorusRate).toBe(0.5);
+        });
+    });
+
+    describe("init() turtleIndex parameter", () => {
+        /**
+         * Builds a minimal activity mock. ithTurtle() returns singer data for
+         * turtles defined in meterByIndex; omitted turtles return undefined
+         * beats/noteValue, which exercises the `|| 4` fallback in init().
+         */
+        function makeActivity(meterByIndex) {
+            return {
+                turtles: {
+                    ithTurtle: jest.fn(i => ({
+                        singer: {
+                            beatsPerMeasure: meterByIndex[i]?.beats,
+                            noteValuePerBeat: meterByIndex[i]?.noteValue,
+                            keySignature: "C major"
+                        }
+                    }))
+                }
+            };
+        }
+
+        /**
+         * Invoke init() and absorb any downstream errors thrown once the DOM
+         * setup begins (after _measureLimit has already been set). This lets us
+         * assert on _measureLimit without providing full DOM stubs for the rest
+         * of the 400-line init() method.
+         */
+        function callInitPartial(pm, activity, turtleIndex) {
+            try {
+                pm.init(activity, turtleIndex);
+            } catch (_) {
+                // Tolerated: errors from un-stubbed DOM APIs further in init().
+                // _measureLimit is computed before any DOM access.
+            }
+        }
+
+        test("defaults to turtle 0 when turtleIndex is omitted", () => {
+            const pm = new PhraseMaker(mockDeps);
+            const activity = makeActivity({ 0: { beats: 4, noteValue: 4 } });
+            callInitPartial(pm, activity, undefined);
+            // 4/4: 4 / 4 = 1.0
+            expect(pm._measureLimit).toBeCloseTo(1.0);
+            expect(activity.turtles.ithTurtle).toHaveBeenCalledWith(0);
+        });
+
+        test("uses turtleIndex 0 explicitly to read 4/4 meter", () => {
+            const pm = new PhraseMaker(mockDeps);
+            const activity = makeActivity({ 0: { beats: 4, noteValue: 4 } });
+            callInitPartial(pm, activity, 0);
+            expect(pm._measureLimit).toBeCloseTo(1.0);
+            expect(activity.turtles.ithTurtle).toHaveBeenCalledWith(0);
+        });
+
+        test("uses turtleIndex 1 to read 3/4 meter from turtle 1", () => {
+            const pm = new PhraseMaker(mockDeps);
+            const activity = makeActivity({
+                0: { beats: 4, noteValue: 4 },
+                1: { beats: 3, noteValue: 4 }
+            });
+            callInitPartial(pm, activity, 1);
+            // 3/4: 3 / 4 = 0.75
+            expect(pm._measureLimit).toBeCloseTo(0.75);
+            expect(activity.turtles.ithTurtle).toHaveBeenCalledWith(1);
+        });
+
+        test("falls back to 4/4 when singer meter is not yet initialized", () => {
+            const pm = new PhraseMaker(mockDeps);
+            // meterByIndex is empty: beats/noteValue are undefined, || 4 applies
+            const activity = makeActivity({});
+            callInitPartial(pm, activity, 0);
+            // undefined || 4 = 4; 4 / 4 = 1.0
+            expect(pm._measureLimit).toBeCloseTo(1.0);
+        });
+    });
+
     describe("dependency injection", () => {
         test("should use injected deps", () => {
             const customDeps = {
