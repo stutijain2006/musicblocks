@@ -657,13 +657,6 @@ const createHelpContent = activity => {
         _("To extract a block, right-click on it. Then you will see the extract option"),
         "data:image/svg+xml;base64," + window.btoa(base64Encode(EXTRACTBUTTON))
     ]);
-    if (_THIS_IS_MUSIC_BLOCKS_) {
-        HELPCONTENT.push([
-            _("Keyboard shortcuts"),
-            _("You can type d to create a do block and r to create a re block etc."),
-            "data:image/svg+xml;base64," + window.btoa(base64Encode(SHORTCUTSBUTTON))
-        ]);
-    }
     if (!activity.beginnerMode) {
         HELPCONTENT.push([
             _("Contextual Menu for Canvas"),
