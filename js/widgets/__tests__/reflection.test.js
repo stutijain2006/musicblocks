@@ -21,6 +21,8 @@
  */
 
 const ReflectionMatrix = require("../reflection");
+const { escapeHTML } = require("../../utils/utils");
+global.escapeHTML = escapeHTML;
 
 // Mock globals
 global._ = str => str;
