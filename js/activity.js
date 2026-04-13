@@ -229,7 +229,7 @@ const doAnalyzeProject = function () {
 /**
  * Represents an activity in the application.
  */
-// eslint-disable-next-line no-redeclare
+
 class Activity {
     /**
      * Creates an Activity instance.
@@ -8163,7 +8163,7 @@ class Activity {
                 },
                 5 * 60 * 1000
             );
-            
+
             initCoreProtoBlocks(this);
 
             // Load any macros saved in local storage.
