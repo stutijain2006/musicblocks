@@ -37,7 +37,8 @@ try {
    doSVG, EMPTYHEAPERRORMSG, EXPANDBUTTON, FILLCOLORS,
    getMacroExpansion, getOctaveRatio, getTemperament, transcribeMidi,
    GOHOMEBUTTON, GOHOMEFADEDBUTTON, GRAND, HelpWidget, HIDEBLOCKSFADEDBUTTON,
-   hideDOMLabel, initBasicProtoBlocks, initPalettes,
+   hideDOMLabel, initBasicProtoBlocks, initAdvancedProtoBlocks, initAdvancedProtoBlocksAsync,
+   initPalettes,
    INLINECOLLAPSIBLES, JSEditor, LanguageBox, ThemeBox, MSGBLOCK,
    NANERRORMSG, NOACTIONERRORMSG, NOBOXERRORMSG, NOINPUTERRORMSG,
    NOMICERRORMSG, NOSQRTERRORMSG, NOSTRINGERRORMSG, PALETTEFILLCOLORS,
@@ -7870,15 +7871,8 @@ class Activity {
                     processPluginData(this, this.pluginData, "localStorage:plugins")
                 );
             }
-            if ("requestIdleCallback" in window) {
-                requestIdleCallback(() => {
-                    initAdvancedProtoBlocks(this);
-                });
-            } else {
-                setTimeout(() => {
-                    initAdvancedProtoBlocks(this);
-                }, 100);
-            }
+            // Advanced protos: scheduled at end of init (see below) so idle work is not
+            // starved by the rest of this function (bitmaps, listeners, etc.).
 
             // Load custom mode saved in local storage.
             const custommodeData = this.storage.custommode;
@@ -8365,14 +8359,31 @@ class Activity {
                 }
             }
 
-            if (this.projectID !== null) {
+            // Defer session / default stack until advanced protos exist (avoids races with
+            // parallel timers). Chunked async registration shortens long tasks for Lighthouse TBT.
+            const scheduleSessionLoad = () => {
                 setTimeout(() => {
-                    that.loadStartWrapper(loadProject, that.projectID, flags, env);
+                    if (this.projectID !== null) {
+                        that.loadStartWrapper(loadProject, that.projectID, flags, env);
+                    } else {
+                        that.loadStartWrapper(loadStart);
+                    }
                 }, 200); // 2000
+            };
+
+            const kickAdvancedThenLoad = () => {
+                if (typeof initAdvancedProtoBlocksAsync === "function") {
+                    initAdvancedProtoBlocksAsync(this, scheduleSessionLoad);
+                } else {
+                    initAdvancedProtoBlocks(this);
+                    scheduleSessionLoad();
+                }
+            };
+
+            if ("requestIdleCallback" in window) {
+                requestIdleCallback(kickAdvancedThenLoad, { timeout: 200 });
             } else {
-                setTimeout(() => {
-                    that.loadStartWrapper(loadStart);
-                }, 200); // 2000
+                setTimeout(kickAdvancedThenLoad, 0);
             }
 
             this.prepSearchWidget();
@@ -8605,6 +8616,7 @@ class Activity {
 
             // Reinitialize blocks
             if (this.blocks) {
+                this._advancedProtoBlocksInitialized = false;
                 initCoreProtoBlocks(this);
                 initAdvancedProtoBlocks(this);
             }

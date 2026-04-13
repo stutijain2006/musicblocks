@@ -65,6 +65,7 @@ setupFunctions.forEach(fnName => {
 describe("initBasicProtoBlocks", () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        delete mockActivity._advancedProtoBlocksInitialized;
     });
 
     it("should assign palettes to activity.blocks.palettes", () => {

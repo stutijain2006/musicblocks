@@ -30,7 +30,7 @@
 /*
    exported
 
-   initBasicProtoBlocks, BACKWARDCOMPATIBILITYDICT
+   initBasicProtoBlocks, initAdvancedProtoBlocksAsync, BACKWARDCOMPATIBILITYDICT
  */
 
 /**
@@ -100,30 +100,32 @@ const initCoreProtoBlocks = activity => {
 };
 
 /**
- * Initialize advanced / heavy blocks (deferred).
+ * Setup functions for advanced protos (resolved at call time so all block modules are loaded).
+ * @returns {Array<function(Object): void>}
  */
-const initAdvancedProtoBlocks = activity => {
-    setupRhythmBlockPaletteBlocks(activity);
-    setupRhythmBlocks(activity);
-    setupMeterBlocks(activity);
-    setupPitchBlocks(activity);
-    setupIntervalsBlocks(activity);
-    setupToneBlocks(activity);
-    setupOrnamentBlocks(activity);
-    setupVolumeBlocks(activity);
-    setupDrumBlocks(activity);
-    setupWidgetBlocks(activity);
-    setupHeapBlocks(activity);
-    setupDictBlocks(activity);
-    setupExtrasBlocks(activity);
-    setupProgramBlocks(activity);
-    setupGraphicsBlocks(activity);
-    setupPenBlocks(activity);
-    setupMediaBlocks(activity);
-    setupSensorsBlocks(activity);
-    setupEnsembleBlocks(activity);
+const getAdvancedProtoSetupFns = () => [
+    setupRhythmBlockPaletteBlocks,
+    setupRhythmBlocks,
+    setupMeterBlocks,
+    setupPitchBlocks,
+    setupIntervalsBlocks,
+    setupToneBlocks,
+    setupOrnamentBlocks,
+    setupVolumeBlocks,
+    setupDrumBlocks,
+    setupWidgetBlocks,
+    setupHeapBlocks,
+    setupDictBlocks,
+    setupExtrasBlocks,
+    setupProgramBlocks,
+    setupGraphicsBlocks,
+    setupPenBlocks,
+    setupMediaBlocks,
+    setupSensorsBlocks,
+    setupEnsembleBlocks
+];
 
-    // Push newly added protoblocks onto palettes
+const pushAdvancedProtosToPalettes = activity => {
     for (const protoblock in activity.blocks.protoBlockDict) {
         if (activity.blocks.protoBlockDict[protoblock].palette != null) {
             activity.blocks.protoBlockDict[protoblock].palette.add(
@@ -132,6 +134,75 @@ const initAdvancedProtoBlocks = activity => {
         }
     }
 };
+
+/**
+ * Initialize advanced / heavy blocks (deferred).
+ */
+const initAdvancedProtoBlocks = activity => {
+    if (activity._advancedProtoBlocksInitialized) {
+        return;
+    }
+
+    for (const fn of getAdvancedProtoSetupFns()) {
+        fn(activity);
+    }
+
+    pushAdvancedProtosToPalettes(activity);
+    activity._advancedProtoBlocksInitialized = true;
+};
+
+/**
+ * Same end state as initAdvancedProtoBlocks, but spreads work across idle slices
+ * to reduce long main-thread tasks (Lighthouse TBT variance).
+ * @param {Object} activity
+ * @param {function(): void} [onComplete]
+ */
+const initAdvancedProtoBlocksAsync = (activity, onComplete) => {
+    if (activity._advancedProtoBlocksInitialized) {
+        if (typeof onComplete === "function") {
+            setTimeout(onComplete, 0);
+        }
+        return;
+    }
+
+    const fns = getAdvancedProtoSetupFns();
+    let i = 0;
+    const BATCH = 2;
+
+    const scheduleYield = next => {
+        if (typeof requestIdleCallback !== "undefined") {
+            requestIdleCallback(next, { timeout: 48 });
+        } else {
+            setTimeout(next, 0);
+        }
+    };
+
+    const finish = () => {
+        pushAdvancedProtosToPalettes(activity);
+        activity._advancedProtoBlocksInitialized = true;
+        if (typeof onComplete === "function") {
+            onComplete();
+        }
+    };
+
+    const step = () => {
+        const end = Math.min(i + BATCH, fns.length);
+        for (; i < end; i++) {
+            fns[i](activity);
+        }
+        if (i < fns.length) {
+            scheduleYield(step);
+        } else {
+            finish();
+        }
+    };
+
+    step();
+};
+
+if (typeof globalThis !== "undefined") {
+    globalThis.initAdvancedProtoBlocksAsync = initAdvancedProtoBlocksAsync;
+}
 
 const initBasicProtoBlocks = activity => {
     initCoreProtoBlocks(activity);
@@ -143,6 +214,7 @@ if (typeof module !== "undefined" && module.exports) {
         initBasicProtoBlocks,
         initCoreProtoBlocks,
         initAdvancedProtoBlocks,
+        initAdvancedProtoBlocksAsync,
         BACKWARDCOMPATIBILITYDICT
     };
 }
