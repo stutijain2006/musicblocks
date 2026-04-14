@@ -86,8 +86,6 @@ window.GuideDemos = {
     },
 
     openRhythmPalette() {
-        console.log("🎬 Demo: Rhythm palette");
-
         const activity = getRealActivity();
         if (!activity) return;
 
@@ -99,6 +97,8 @@ window.GuideDemos = {
             if (palette && palette.hideMenu) {
                 palette.hideMenu();
             }
+            window._lgRunningDemo = false;
+            GuideDemos.resetCurrentStepAfterDemo();
         }, 1000);
     },
 
@@ -114,6 +114,8 @@ window.GuideDemos = {
             if (palette && palette.hideMenu) {
                 palette.hideMenu();
             }
+            window._lgRunningDemo = false;
+            GuideDemos.resetCurrentStepAfterDemo();
         }, 1000);
     },
 
@@ -1010,6 +1012,9 @@ window.GuideDemos = {
     showPlayButton() {
         const playBtn = document.querySelector("#play, .play-button");
         if (playBtn) this.highlight(playBtn);
+        setTimeout(() => {
+            window._lgRunningDemo = false;
+        }, 250);
     },
 
     showMelodyExample() {

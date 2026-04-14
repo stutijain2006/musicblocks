@@ -1,9 +1,6 @@
 window.GuideValidator = {
     check(step) {
-        console.log(`🔍 Validating step: ${step.id}, action: ${step.action}`);
-
         if (!step.action) {
-            console.log("✅ No action required - step complete");
             return true;
         }
 
@@ -40,7 +37,6 @@ window.GuideValidator = {
             case "graphics_block":
                 return this.validateGraphicsBlock();
             default:
-                console.log(`❓ Unknown action: ${step.action}`);
                 return false;
         }
     },
@@ -64,22 +60,12 @@ window.GuideValidator = {
 
         if (window._lgRunningDemo) return false;
         const result = window._lgLastPalette === paletteName && currentCounter > initialCounter;
-
-        console.log("🎨 Palette check", {
-            expected: paletteName,
-            lastOpened: window._lgLastPalette,
-            initialCounter,
-            currentCounter,
-            result
-        });
-
         return result;
     },
 
     validateBlockAdded(blockName) {
         const activity = getRealActivity();
         if (!activity || !activity.blocks?.blockList) {
-            console.log("❌ No real activity for block validation");
             return false;
         }
 
@@ -101,11 +87,6 @@ window.GuideValidator = {
 
         const initial = LG.initialCounts[LG.step] || 0;
         const result = current > initial;
-
-        console.log(
-            `🔢 Block "${blockName}" — current: ${current}, initial: ${initial}, result: ${result}`
-        );
-
         return result;
     },
 
@@ -132,11 +113,6 @@ window.GuideValidator = {
 
         const initial = LG.initialCounts[LG.step] || 0;
         const result = current > initial;
-
-        console.log(
-            `🎼 Pitch-in-note — current: ${current}, initial: ${initial}, result: ${result}`
-        );
-
         return result;
     },
 
@@ -216,9 +192,6 @@ window.GuideValidator = {
         const changed =
             currentOctaves.length !== initial.length ||
             currentOctaves.some((val, i) => val !== initial[i]);
-
-        console.log(`🎚️ Octave change check`, { initial, currentOctaves, changed });
-
         return changed;
     },
 
@@ -229,30 +202,53 @@ window.GuideValidator = {
 
         const blockList = activity.blocks.blockList || {};
         let currentConnection = null;
+        let currentStartNoteCount = 0;
 
         for (const id in blockList) {
             const block = blockList[id];
             if (block && block.name === "start" && block.connections) {
                 currentConnection = block.connections[1] || null;
+                let currentId = currentConnection;
+                let guard = 0;
+                while (currentId !== null && currentId !== undefined && guard < 80) {
+                    const current = blockList[currentId];
+                    if (!current || current.trash) break;
+                    if (current.name === "newnote" || current.name === "note") {
+                        currentStartNoteCount++;
+                    }
+                    currentId = current.connections?.[1] ?? null;
+                    guard++;
+                }
                 break;
             }
         }
 
-        const initial = LG.initialCounts[LG.step] || null;
-
-        const changed = currentConnection !== initial;
-
-        console.log(`🔗 Connection change check`, { initial, currentConnection, changed });
-
+        const initial = LG.initialCounts[LG.step] || {
+            initialConnection: null,
+            initialStartNoteCount: 0
+        };
+        const changedConnection = currentConnection !== initial.initialConnection;
+        const extendedStack = currentStartNoteCount > initial.initialStartNoteCount;
+        const changed = changedConnection || extendedStack;
         return changed;
     },
     validatePlay() {
-        const { started, ended } = window._lgPlayState;
+        const playState = window._lgPlayState;
+        const { started } = playState;
+        let { ended } = playState;
+
+        // Allow completion when playback naturally finishes (without Stop click).
+        if (started && !ended) {
+            const activity = this.getActivitySafely();
+            const startedAt = playState.startedAt || 0;
+            const elapsed = Date.now() - startedAt;
+            if (activity?.turtles && elapsed > 800 && !activity.turtles.running()) {
+                ended = true;
+                playState.ended = true;
+            }
+        }
 
         const result = started && ended;
-
-        console.log(`🎵 Play validation`, { started, ended, result });
-
         return result;
     },
 
@@ -284,11 +280,6 @@ window.GuideValidator = {
         }
 
         const result = addedConnectedToStart >= 3;
-
-        console.log(
-            `🎵 Melody check — initial notes: ${initialNoteIds.length}, newly-added connected notes: ${addedConnectedToStart}, result: ${result}`
-        );
-
         return result;
     },
     hasStartAncestor(block, blockList) {
@@ -331,7 +322,6 @@ window.GuideValidator = {
                     block.value !== "" &&
                     block.value !== "electronic synth"
                 ) {
-                    console.log("🎶 New Set Instrument changed to:", block.value);
                     return true;
                 }
             }
@@ -355,7 +345,6 @@ window.GuideValidator = {
                 block.connections &&
                 block.connections[2] !== null
             ) {
-                console.log("🔁 Repeat block wrapping detected");
                 return true;
             }
         }
@@ -378,7 +367,6 @@ window.GuideValidator = {
                 !block.trash &&
                 this.isBlockInsideNote(block, blockList)
             ) {
-                console.log("➡️ Forward block inside note detected");
                 return true;
             }
         }

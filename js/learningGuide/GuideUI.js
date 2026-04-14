@@ -1,6 +1,5 @@
 window.GuideUI = {
     show(step) {
-        console.log(`Showing step: ${step.id}`);
         this.clearHighlights();
 
         // Create or update overlay first
@@ -47,7 +46,6 @@ window.GuideUI = {
             const el = document.querySelector(step.target);
             if (el) {
                 el.classList.add("lg-highlight");
-                console.log(`Highlighted target: ${step.target}`);
             } else {
                 console.warn(`Target not found: ${step.target}`);
             }
@@ -59,7 +57,6 @@ window.GuideUI = {
             if (btn) {
                 btn.classList.add("lg-pulse");
                 this.addArrow(btn);
-                console.log(`Highlighted palette button: ${step.palette}`);
             } else {
                 console.warn(`Palette button not found: ${step.palette}`);
             }

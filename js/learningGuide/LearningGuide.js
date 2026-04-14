@@ -8,7 +8,8 @@ window._lgLastPalette = null;
 window._lgPaletteCounter = 0;
 window._lgPlayState = {
     started: false,
-    ended: false
+    ended: false,
+    startedAt: 0
 };
 window._lgRestoreCounter = 0;
 window._lgLocalLoadCounter = 0;
@@ -23,16 +24,15 @@ function hookPlayStopButtons() {
     if (playBtn && !playBtn._lgHooked) {
         playBtn._lgHooked = true;
         playBtn.addEventListener("click", () => {
-            console.log("▶️ Play clicked");
             window._lgPlayState.started = true;
             window._lgPlayState.ended = false;
+            window._lgPlayState.startedAt = Date.now();
         });
     }
 
     if (stopBtn && !stopBtn._lgHooked) {
         stopBtn._lgHooked = true;
         stopBtn.addEventListener("click", () => {
-            console.log("⏹️ Stop clicked");
             window._lgPlayState.ended = true;
         });
     }
@@ -92,7 +92,6 @@ let LG = {
     waitStartTime: null,
 
     init() {
-        console.log("🎵 Learning Guide: Starting initialization...");
         const wait = setInterval(() => {
             const activity = getRealActivity();
 
@@ -103,7 +102,6 @@ let LG = {
                 Object.keys(activity.blocks.blockList).length > 0
             ) {
                 clearInterval(wait);
-                console.log("✅ Music Blocks fully ready. Starting guide.");
                 this.start();
             }
         }, 300);
@@ -132,10 +130,8 @@ let LG = {
             }
 
             const currentMethod = methods[methodIndex];
-            console.log(`🔍 Trying detection method ${methodIndex + 1}...`);
 
             if (currentMethod()) {
-                console.log(`✅ Detection method ${methodIndex + 1} succeeded!`);
                 this.start();
                 return;
             }
@@ -151,7 +147,6 @@ let LG = {
     detectViaWindowActivity() {
         const activity = getRealActivity();
         if (activity && activity.blocks && activity.blocks.blockList) {
-            console.log("✅ Detected via window.activity");
             return true;
         }
         return false;
@@ -161,7 +156,6 @@ let LG = {
     openPaletteManually(paletteName) {
         const button = this.findPaletteButton(paletteName);
         if (button) {
-            console.log(`🖱️ Clicking palette button: ${paletteName}`);
             button.click();
             return true;
         }
@@ -177,7 +171,6 @@ let LG = {
         for (const selector of alternatives) {
             const btn = document.querySelector(selector);
             if (btn) {
-                console.log(`🖱️ Found and clicking: ${selector}`);
                 btn.click();
                 return true;
             }
@@ -249,7 +242,6 @@ let LG = {
     },
 
     retryInitialization() {
-        console.log("🔄 Retrying initialization...");
         this.waitStartTime = Date.now();
         this.tryMultipleDetectionMethods();
     },
@@ -260,7 +252,6 @@ let LG = {
 
         if (!activity || !activity.blocks?.blockList) {
             this.initialCounts[this.step] = 0;
-            console.warn("⚠️ prepareStep: no real activity yet");
             return;
         }
 
@@ -268,7 +259,6 @@ let LG = {
 
         if (step.action === "palette") {
             this.initialCounts[this.step] = window._lgPaletteCounter;
-            console.log("🎨 Step initial palette counter:", this.initialCounts[this.step]);
             return;
         }
         // 👇 SPECIAL CASE: pitch_inside step
@@ -289,7 +279,6 @@ let LG = {
             }
 
             this.initialCounts[this.step] = count;
-            console.log(`🎼 Step ${this.step} initial pitch-in-note count:`, count);
             return;
         }
 
@@ -320,7 +309,6 @@ let LG = {
             }
 
             this.initialCounts[this.step] = octaves;
-            console.log(`🎚️ Step ${this.step} initial octave values:`, octaves);
             return;
         }
 
@@ -329,24 +317,38 @@ let LG = {
             const blockList = activity?.blocks?.blockList || {};
 
             let initialConnection = null;
+            let initialStartNoteCount = 0;
 
             for (const id in blockList) {
                 const block = blockList[id];
                 if (block && block.name === "start" && block.connections) {
                     initialConnection = block.connections[1] || null;
+                    let currentId = initialConnection;
+                    let guard = 0;
+                    while (currentId !== null && currentId !== undefined && guard < 80) {
+                        const current = blockList[currentId];
+                        if (!current || current.trash) break;
+                        if (current.name === "newnote" || current.name === "note") {
+                            initialStartNoteCount++;
+                        }
+                        currentId = current.connections?.[1] ?? null;
+                        guard++;
+                    }
                     break;
                 }
             }
 
-            this.initialCounts[this.step] = initialConnection;
-            console.log(`🔗 Step ${this.step} initial start connection:`, initialConnection);
+            this.initialCounts[this.step] = {
+                initialConnection,
+                initialStartNoteCount
+            };
             return;
         }
 
         if (step.action === "play") {
             window._lgPlayState.started = false;
             window._lgPlayState.ended = false;
-            console.log("🎵 Play state reset");
+            window._lgPlayState.startedAt = 0;
             return;
         }
 
@@ -370,8 +372,6 @@ let LG = {
             }
 
             this.initialCounts[this.step] = noteIds;
-
-            console.log(`🎵 Step ${this.step} initial note IDs:`, noteIds);
             return;
         }
 
@@ -389,7 +389,6 @@ let LG = {
             }
 
             this.initialCounts[this.step] = existingIds;
-            console.log("🎶 Initial voicename IDs:", existingIds);
             return;
         }
 
@@ -422,7 +421,6 @@ let LG = {
         }
 
         this.initialCounts[this.step] = count;
-        console.log(`🧮 Step ${this.step} initial ${blockName}:`, count);
     },
 
     getBlockList() {
@@ -431,33 +429,22 @@ let LG = {
 
         // Fallback to globalActivity if available
         if (!activity && typeof globalActivity !== "undefined") {
-            console.log("📋 Using globalActivity instead of window.activity");
             activity = globalActivity;
         }
 
         if (!activity) {
-            console.log("⚠️ No activity found (checked window.activity and globalActivity)");
             return {};
         }
         if (!activity.blocks) {
-            console.log("⚠️ activity.blocks is null/undefined");
             return {};
         }
         if (!activity.blocks.blockList) {
-            console.log("⚠️ activity.blocks.blockList is null/undefined");
             return {};
         }
 
         const blockList = activity.blocks.blockList;
         const isArray = Array.isArray(blockList);
         const length = isArray ? blockList.length : Object.keys(blockList).length;
-
-        console.log("📋 Getting blockList:", {
-            type: isArray ? "Array" : typeof blockList,
-            length: length,
-            sampleKeys: Object.keys(blockList).slice(0, 10)
-        });
-
         // Also check if there are any blocks at all
         if (length > 0) {
             let sampleNames = [];
@@ -469,7 +456,6 @@ let LG = {
                     if (sampleNames.length >= 5) break;
                 }
             }
-            console.log("📋 Sample block names:", sampleNames);
         }
 
         return blockList;
@@ -477,14 +463,12 @@ let LG = {
 
     countBlocksByName(blockList, blockName) {
         if (!blockList) {
-            console.log(`⚠️ BlockList is null/undefined when counting ${blockName}`);
             return 0;
         }
 
         // Debug: Check blockList structure
         const isArray = Array.isArray(blockList);
         const length = isArray ? blockList.length : Object.keys(blockList).length;
-        console.log(`🔍 BlockList type:`, isArray ? "Array" : typeof blockList, `Length:`, length);
 
         // Use for...in loop - works for both arrays and objects
         let count = 0;
@@ -511,34 +495,16 @@ let LG = {
                 blockNames.push(blockNameValue);
                 if (blockNameValue === blockName) {
                     count++;
-                    console.log(`✅ Found matching block! ID: ${blockId}, Name: ${blockNameValue}`);
                 }
             }
         }
-
-        // Always log for debugging
-        console.log(`🔍 Block counting results:`);
-        console.log(`  - Total entries in blockList: ${length}`);
-        console.log(`  - Valid blocks: ${allBlocks.length}, Null entries: ${nullCount}`);
-        console.log(`  - Matching "${blockName}": ${count}`);
-        if (blockNames.length > 0) {
-            console.log(`  - All block names:`, blockNames);
-        } else if (allBlocks.length > 0) {
-            console.log(`  - Blocks without names:`, allBlocks);
-        } else {
-            console.log(`  - ⚠️ No blocks found in blockList!`);
-        }
-
         return count;
     },
 
     start() {
         if (this.active) {
-            console.log("Guide already active, skipping start");
             return;
         }
-
-        console.log("🎵 Starting Learning Guide!");
         this.active = true;
         this.step = 0;
         this.prepareStep(GuideSteps[this.step]);
@@ -549,8 +515,6 @@ let LG = {
     watch() {
         clearInterval(this.interval);
         const step = GuideSteps[this.step];
-
-        console.log(`👀 Watching step ${this.step}:`, step.id);
 
         // Handle different step types
         if (step.action === "palette") {
@@ -569,14 +533,12 @@ let LG = {
 
             const isComplete = GuideValidator.check(step);
             if (isComplete) {
-                console.log(`✅ Step ${this.step} completed!`);
                 clearInterval(this.interval);
                 GuideUI.unlock();
                 return;
             }
 
             if (attempts >= maxAttempts) {
-                console.warn(`⚠️ Palette step ${step.id} timed out after ${maxAttempts * 500}ms`);
                 clearInterval(this.interval);
                 // Don't auto-unlock - let user complete the step manually
                 return;
@@ -593,7 +555,6 @@ let LG = {
         this.interval = setInterval(() => {
             const isComplete = GuideValidator.check(step);
             if (isComplete) {
-                console.log(`✅ Step ${this.step} completed!`);
                 clearInterval(this.interval);
                 GuideUI.unlock();
             }
@@ -601,13 +562,10 @@ let LG = {
     },
 
     next() {
-        console.log(`⏭️ Attempting to move from step ${this.step}`);
-
         const currentStep = GuideSteps[this.step];
         const isComplete = GuideValidator.check(currentStep);
 
         if (!isComplete) {
-            console.log(`❌ Step ${this.step} (${currentStep.id}) not completed yet`);
             // Re-enable watching in case validation was missed
             this.watch();
             return;
@@ -618,13 +576,11 @@ let LG = {
 
         this.step++;
         if (this.step >= GuideSteps.length) {
-            console.log("🎉 Guide completed!");
             GuideUI.finish();
             return;
         }
 
         const nextStep = GuideSteps[this.step];
-        console.log(`➡️ Moving to step ${this.step} (${nextStep.id})`);
 
         // Prepare step first to capture initial state
         this.prepareStep(nextStep);
@@ -640,14 +596,12 @@ let LG = {
         if (this.step === 0) return;
 
         this.step--;
-        console.log(`⬅️ Moving back to step ${this.step}`);
         this.prepareStep(GuideSteps[this.step]);
         GuideUI.show(GuideSteps[this.step]);
         this.watch();
     },
 
     stop() {
-        console.log("⏹️ Stopping Learning Guide");
         this.active = false;
         clearInterval(this.interval);
         GuideUI.close();
@@ -657,7 +611,6 @@ let LG = {
 function addLearningGuideTopButton() {
     const menuBtn = document.getElementById("toggleAuxBtn");
     if (!menuBtn) {
-        console.warn("⚠️ Menu button not found yet");
         return;
     }
 
@@ -683,7 +636,6 @@ function addLearningGuideTopButton() {
     btn.innerHTML = `<i class="material-icons md-48">school</i>`;
 
     btn.onclick = () => {
-        console.log("🎓 Replay Learning Guide clicked");
         window.startLearningGuide();
     };
 
@@ -696,17 +648,12 @@ function addLearningGuideTopButton() {
     if (window.M && M.Tooltip) {
         M.Tooltip.init(btn);
     }
-
-    console.log("✅ Learning Guide button added with Materialize tooltip");
 }
 
 // Enhanced initialization
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("📄 DOM loaded, preparing guide initialization...");
-
     // Wait a bit for other scripts to load
     setTimeout(() => {
-        console.log("🚀 Starting guide initialization...");
         const waitPaletteHook = setInterval(() => {
             const activity = getRealActivity();
             if (activity?.blocks?.palettes?.showPalette) {
@@ -720,13 +667,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     return original.call(this, name);
                 };
-
-                console.log("🎯 Learning Guide palette hook installed");
             }
         }, 300);
         addLearningGuideTopButton();
         if (!sessionStorage.getItem("learningGuidePlayed")) {
-            console.log("▶️ Auto-starting Learning Guide (once per reload)");
             sessionStorage.setItem("learningGuidePlayed", "true");
             LG.init();
         }
@@ -737,15 +681,12 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("load", () => {
     setTimeout(() => {
         if (!LG.active) {
-            console.log("🔄 DOM fallback: Retrying guide initialization...");
             LG.init();
         }
     }, 1000);
 });
 
 window.startLearningGuide = function () {
-    console.log("🔁 Starting Learning Guide");
-
     // Hard reset
     LG.stop();
     LG.active = false;
