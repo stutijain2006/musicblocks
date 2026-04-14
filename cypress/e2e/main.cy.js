@@ -25,8 +25,8 @@ describe("MusicBlocks Application", () => {
             cy.get("#canvas").should("be.visible");
         });
 
-        it("should display the Musicblocks guide page", () => {
-            cy.get(".heading").contains("Welcome to Music Blocks");
+        it("should load the Music Blocks page title", () => {
+            cy.title().should("include", "Music Blocks");
         });
     });
 

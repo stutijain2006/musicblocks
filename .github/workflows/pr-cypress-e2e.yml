@@ -36,7 +36,7 @@ jobs:
           wait-on: 'http://127.0.0.1:3000'
           wait-on-timeout: 120
           browser: chrome
-          config: video=false
+          config: video=false,allowCypressEnv=false
 
       - name: Upload Cypress Screenshots on Failure
         if: failure()

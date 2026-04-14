@@ -66,8 +66,8 @@ window.GuideUI = {
         }
 
         if (step.action === "octave_change") {
-            document.querySelectorAll('.number').forEach(el => {
-                el.classList.add('lg-highlight');
+            document.querySelectorAll(".number").forEach(el => {
+                el.classList.add("lg-highlight");
             });
         }
     },
@@ -129,12 +129,12 @@ window.GuideUI = {
                 <span>${isCompleted ? "Step completed!" : "Waiting for you to complete this step…"}</span>
             </div>
             <div class="lg-buttons">
-                ${LG.step > 0 ? `<button class="lg-btn lg-prev" onclick="LG.prev()">← Previous</button>` : ''}
-                <button id="lg-next" class="lg-btn lg-next ${isCompleted ? 'lg-ready' : ''}" 
-                        ${isCompleted ? '' : 'disabled'} 
-                        ${isCompleted ? '' : 'style="pointer-events: none;"'}
+                ${LG.step > 0 ? `<button class="lg-btn lg-prev" onclick="LG.prev()">← Previous</button>` : ""}
+                <button id="lg-next" class="lg-btn lg-next ${isCompleted ? "lg-ready" : ""}" 
+                        ${isCompleted ? "" : "disabled"} 
+                        ${isCompleted ? "" : 'style="pointer-events: none;"'}
                         onclick="LG.next()">
-                    ${LG.step === GuideSteps.length - 1 ? '🎉 Finish' : 'Next →'}
+                    ${LG.step === GuideSteps.length - 1 ? "🎉 Finish" : "Next →"}
                 </button>
                 <button id="lg-demo" class="lg-btn lg-demo">
                     🎬 Show Me

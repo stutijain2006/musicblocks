@@ -61,7 +61,6 @@ let LG = {
         const waitPlayHook = setInterval(() => {
             hookPlayStopButtons();
         }, 500);
-
     },
 
     tryMultipleDetectionMethods() {
@@ -107,7 +106,6 @@ let LG = {
         return false;
     },
 
-
     // Manual palette opening fallback
     openPaletteManually(paletteName) {
         const button = this.findPaletteButton(paletteName);
@@ -141,14 +139,20 @@ let LG = {
         // Multiple strategies to find palette buttons
         const strategies = [
             () => document.getElementById(`${paletteName}tabbutton`),
-            () => document.getElementById(`${paletteName.charAt(0).toUpperCase()}${paletteName.slice(1)}tabbutton`),
+            () =>
+                document.getElementById(
+                    `${paletteName.charAt(0).toUpperCase()}${paletteName.slice(1)}tabbutton`
+                ),
             () => document.querySelector(`[id*="${paletteName}"][id*="tab"]`),
             () => document.querySelector(`[data-palette="${paletteName}"]`),
             () => {
                 // Look for buttons containing the palette name
                 const buttons = document.querySelectorAll('button, [role="button"]');
                 for (const btn of buttons) {
-                    if (btn.textContent && btn.textContent.toLowerCase().includes(paletteName.toLowerCase())) {
+                    if (
+                        btn.textContent &&
+                        btn.textContent.toLowerCase().includes(paletteName.toLowerCase())
+                    ) {
                         return btn;
                     }
                 }
@@ -163,7 +167,6 @@ let LG = {
 
         return null;
     },
-
 
     showErrorMessage() {
         const errorDiv = document.createElement("div");
@@ -214,10 +217,7 @@ let LG = {
 
         if (step.action === "palette") {
             this.initialCounts[this.step] = window._lgPaletteCounter;
-            console.log(
-                "🎨 Step initial palette counter:",
-                this.initialCounts[this.step]
-            );
+            console.log("🎨 Step initial palette counter:", this.initialCounts[this.step]);
             return;
         }
         // 👇 SPECIAL CASE: pitch_inside step
@@ -288,10 +288,7 @@ let LG = {
             }
 
             this.initialCounts[this.step] = initialConnection;
-            console.log(
-                `🔗 Step ${this.step} initial start connection:`,
-                initialConnection
-            );
+            console.log(`🔗 Step ${this.step} initial start connection:`, initialConnection);
             return;
         }
 
@@ -323,10 +320,7 @@ let LG = {
 
             this.initialCounts[this.step] = noteIds;
 
-            console.log(
-                `🎵 Step ${this.step} initial note IDs:`,
-                noteIds
-            );
+            console.log(`🎵 Step ${this.step} initial note IDs:`, noteIds);
             return;
         }
 
@@ -338,10 +332,7 @@ let LG = {
             const existingIds = [];
 
             for (const id in blockList) {
-                if (
-                    blockList[id]?.name === "voicename" &&
-                    !blockList[id].trash
-                ) {
+                if (blockList[id]?.name === "voicename" && !blockList[id].trash) {
                     existingIds.push(id);
                 }
             }
@@ -362,10 +353,7 @@ let LG = {
         }
 
         this.initialCounts[this.step] = count;
-        console.log(
-            `🧮 Step ${this.step} initial ${blockName}:`,
-            count
-        );
+        console.log(`🧮 Step ${this.step} initial ${blockName}:`, count);
     },
 
     getBlockList() {
@@ -373,7 +361,7 @@ let LG = {
         let activity = getRealActivity();
 
         // Fallback to globalActivity if available
-        if (!activity && typeof globalActivity !== 'undefined') {
+        if (!activity && typeof globalActivity !== "undefined") {
             console.log("📋 Using globalActivity instead of window.activity");
             activity = globalActivity;
         }
@@ -396,7 +384,7 @@ let LG = {
         const length = isArray ? blockList.length : Object.keys(blockList).length;
 
         console.log("📋 Getting blockList:", {
-            type: isArray ? 'Array' : typeof blockList,
+            type: isArray ? "Array" : typeof blockList,
             length: length,
             sampleKeys: Object.keys(blockList).slice(0, 10)
         });
@@ -427,7 +415,7 @@ let LG = {
         // Debug: Check blockList structure
         const isArray = Array.isArray(blockList);
         const length = isArray ? blockList.length : Object.keys(blockList).length;
-        console.log(`🔍 BlockList type:`, isArray ? 'Array' : typeof blockList, `Length:`, length);
+        console.log(`🔍 BlockList type:`, isArray ? "Array" : typeof blockList, `Length:`, length);
 
         // Use for...in loop - works for both arrays and objects
         let count = 0;
@@ -447,7 +435,7 @@ let LG = {
                 continue;
             }
 
-            allBlocks.push({ id: blockId, name: block.name || 'no-name' });
+            allBlocks.push({ id: blockId, name: block.name || "no-name" });
             const blockNameValue = block.name;
 
             if (blockNameValue) {
@@ -614,7 +602,7 @@ function addLearningGuideTopButton() {
 
     const btn = document.createElement("a");
     btn.id = "learning-guide-top-btn";
-    btn.className = "tooltipped";   // ✅ Materialize tooltip class
+    btn.className = "tooltipped"; // ✅ Materialize tooltip class
 
     // ✅ Materialize tooltip attributes
     btn.setAttribute("data-position", "bottom");

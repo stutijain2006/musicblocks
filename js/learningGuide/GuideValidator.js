@@ -46,7 +46,7 @@ window.GuideValidator = {
             return activity;
         }
         // Fallback to globalActivity
-        if (typeof globalActivity !== 'undefined' && globalActivity && globalActivity.blocks) {
+        if (typeof globalActivity !== "undefined" && globalActivity && globalActivity.blocks) {
             return globalActivity;
         }
         return null;
@@ -57,20 +57,15 @@ window.GuideValidator = {
         const currentCounter = window._lgPaletteCounter;
 
         if (window._lgRunningDemo) return false;
-        const result =
-            window._lgLastPalette === paletteName &&
-            currentCounter > initialCounter;
+        const result = window._lgLastPalette === paletteName && currentCounter > initialCounter;
 
-        console.log(
-            "🎨 Palette check",
-            {
-                expected: paletteName,
-                lastOpened: window._lgLastPalette,
-                initialCounter,
-                currentCounter,
-                result
-            }
-        );
+        console.log("🎨 Palette check", {
+            expected: paletteName,
+            lastOpened: window._lgLastPalette,
+            initialCounter,
+            currentCounter,
+            result
+        });
 
         return result;
     },
@@ -216,10 +211,7 @@ window.GuideValidator = {
             currentOctaves.length !== initial.length ||
             currentOctaves.some((val, i) => val !== initial[i]);
 
-        console.log(
-            `🎚️ Octave change check`,
-            { initial, currentOctaves, changed }
-        );
+        console.log(`🎚️ Octave change check`, { initial, currentOctaves, changed });
 
         return changed;
     },
@@ -244,10 +236,7 @@ window.GuideValidator = {
 
         const changed = currentConnection !== initial;
 
-        console.log(
-            `🔗 Connection change check`,
-            { initial, currentConnection, changed }
-        );
+        console.log(`🔗 Connection change check`, { initial, currentConnection, changed });
 
         return changed;
     },
@@ -256,10 +245,7 @@ window.GuideValidator = {
 
         const result = started && ended;
 
-        console.log(
-            `🎵 Play validation`,
-            { started, ended, result }
-        );
+        console.log(`🎵 Play validation`, { started, ended, result });
 
         return result;
     },
@@ -271,8 +257,8 @@ window.GuideValidator = {
 
         const blockList = activity.blocks.blockList || {};
         const initialNoteIds = LG.initialCounts[LG.step] || [];
-        const initialIdSet = new Set(initialNoteIds.map((id) => String(id)));
-        const demoIdSet = new Set((window._lgDemoBlocks || []).map((id) => String(id)));
+        const initialIdSet = new Set(initialNoteIds.map(id => String(id)));
+        const demoIdSet = new Set((window._lgDemoBlocks || []).map(id => String(id)));
         let addedConnectedToStart = 0;
 
         for (const id in blockList) {
@@ -339,10 +325,7 @@ window.GuideValidator = {
                     block.value !== "" &&
                     block.value !== "electronic synth"
                 ) {
-                    console.log(
-                        "🎶 New Set Instrument changed to:",
-                        block.value
-                    );
+                    console.log("🎶 New Set Instrument changed to:", block.value);
                     return true;
                 }
             }
