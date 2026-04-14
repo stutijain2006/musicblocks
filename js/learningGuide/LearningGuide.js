@@ -10,6 +10,11 @@ window._lgPlayState = {
     started: false,
     ended: false
 };
+window._lgRestoreCounter = 0;
+window._lgLocalLoadCounter = 0;
+window._lgPlanetOpenCounter = 0;
+window._lgTrashChangeCounter = 0;
+window._lgLastTrashStackLen = -1;
 
 function hookPlayStopButtons() {
     const playBtn = document.querySelector("#play, .play-button");
@@ -30,6 +35,51 @@ function hookPlayStopButtons() {
             console.log("⏹️ Stop clicked");
             window._lgPlayState.ended = true;
         });
+    }
+}
+
+function hookGuideActionButtons() {
+    const restoreBtn = document.querySelector("#restoreIcon");
+    if (restoreBtn && !restoreBtn._lgHooked) {
+        restoreBtn._lgHooked = true;
+        restoreBtn.addEventListener("click", () => {
+            if (!window._lgRunningDemo) {
+                window._lgRestoreCounter++;
+            }
+        });
+    }
+
+    const fileInput = document.querySelector("#myOpenFile");
+    if (fileInput && !fileInput._lgHooked) {
+        fileInput._lgHooked = true;
+        fileInput.addEventListener("change", () => {
+            if (!window._lgRunningDemo) {
+                window._lgLocalLoadCounter++;
+            }
+        });
+    }
+
+    const planetBtn = document.querySelector("#planetIcon");
+    if (planetBtn && !planetBtn._lgHooked) {
+        planetBtn._lgHooked = true;
+        planetBtn.addEventListener("click", () => {
+            if (!window._lgRunningDemo) {
+                window._lgPlanetOpenCounter++;
+            }
+        });
+    }
+
+    const activity = getRealActivity();
+    const trashLen = activity?.blocks?.trashStacks?.length;
+    if (typeof trashLen === "number") {
+        if (window._lgLastTrashStackLen === -1) {
+            window._lgLastTrashStackLen = trashLen;
+        } else {
+            if (trashLen > window._lgLastTrashStackLen && !window._lgRunningDemo) {
+                window._lgTrashChangeCounter++;
+            }
+            window._lgLastTrashStackLen = trashLen;
+        }
     }
 }
 
@@ -60,6 +110,7 @@ let LG = {
 
         const waitPlayHook = setInterval(() => {
             hookPlayStopButtons();
+            hookGuideActionButtons();
         }, 500);
     },
 
@@ -339,6 +390,24 @@ let LG = {
 
             this.initialCounts[this.step] = existingIds;
             console.log("🎶 Initial voicename IDs:", existingIds);
+            return;
+        }
+
+        if (step.action === "delete_restore") {
+            this.initialCounts[this.step] = {
+                restoreCounter: window._lgRestoreCounter,
+                trashChangeCounter: window._lgTrashChangeCounter
+            };
+            return;
+        }
+
+        if (step.action === "load_local") {
+            this.initialCounts[this.step] = window._lgLocalLoadCounter;
+            return;
+        }
+
+        if (step.action === "load_planet") {
+            this.initialCounts[this.step] = window._lgPlanetOpenCounter;
             return;
         }
 

@@ -27,6 +27,12 @@ window.GuideValidator = {
                 return this.validatePlay();
             case "save":
                 return window._guideSaved === true;
+            case "delete_restore":
+                return this.validateDeleteRestore();
+            case "load_local":
+                return this.validateLoadLocal();
+            case "load_planet":
+                return this.validateLoadPlanet();
             case "tone_block":
                 return this.validateToneBlock();
             case "flow_block":
@@ -378,5 +384,25 @@ window.GuideValidator = {
         }
 
         return false;
+    },
+    validateDeleteRestore() {
+        if (window._lgRunningDemo) return false;
+        const baseline = LG.initialCounts[LG.step] || {
+            restoreCounter: 0,
+            trashChangeCounter: 0
+        };
+        const deleted = window._lgTrashChangeCounter > baseline.trashChangeCounter;
+        const restoredViaButton = window._lgRestoreCounter > baseline.restoreCounter;
+        return deleted && restoredViaButton;
+    },
+    validateLoadLocal() {
+        if (window._lgRunningDemo) return false;
+        const initial = LG.initialCounts[LG.step] || 0;
+        return window._lgLocalLoadCounter > initial;
+    },
+    validateLoadPlanet() {
+        if (window._lgRunningDemo) return false;
+        const initial = LG.initialCounts[LG.step] || 0;
+        return window._lgPlanetOpenCounter > initial;
     }
 };

@@ -96,6 +96,13 @@ window.GuideSteps = [
     },
 
     {
+        id: "delete_restore",
+        text: "Delete one block, then click Restore from Trash to bring it back.",
+        action: "delete_restore",
+        demo: "showDeleteRestoreDemo"
+    },
+
+    {
         id: "save",
         text: "Click the Save icon 💾 to store your project.",
         action: "save",
@@ -103,8 +110,22 @@ window.GuideSteps = [
     },
 
     {
+        id: "load_local",
+        text: "Load a project from your local file system (you can choose the file you just saved).",
+        action: "load_local",
+        demo: "showLoadLocalDemo"
+    },
+
+    {
+        id: "load_planet",
+        text: "Open Planet and load a project from the server examples.",
+        action: "load_planet",
+        demo: "showPlanetDemo"
+    },
+
+    {
         id: "end",
-        text: "🎉 You now understand Music Blocks: Notes, Pitch, Rhythm, Instruments, Loops & Graphics!",
+        text: "🎉 You now know how to build, edit, save, and load Music Blocks projects!",
         action: null
     }
 ];

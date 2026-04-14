@@ -1223,6 +1223,137 @@ window.GuideDemos = {
         const saveBtn = document.querySelector("#saveButton, .save-button");
         if (saveBtn) this.highlight(saveBtn);
     },
+    showDeleteRestoreDemo() {
+        const activity = getRealActivity();
+        if (!activity) return;
+        window._lgRunningDemo = true;
+
+        const blocks = activity.blocks;
+        const blockList = blocks.blockList || {};
+        let demoTargetId = null;
+        let startId = null;
+
+        for (const id in blockList) {
+            const b = blockList[id];
+            if (b && b.name === "start" && !b.trash) {
+                startId = id;
+                break;
+            }
+        }
+
+        if (startId !== null && startId !== undefined) {
+            let currentId = blockList[startId]?.connections?.[1] ?? null;
+            let guard = 0;
+            while (currentId !== null && currentId !== undefined && guard < 80) {
+                const current = blockList[currentId];
+                if (!current || current.trash) break;
+                if (current.name === "newnote") {
+                    demoTargetId = currentId;
+                    break;
+                }
+                currentId = current.connections?.[1] ?? null;
+                guard++;
+            }
+        }
+
+        if (demoTargetId === null || demoTargetId === undefined) {
+            for (const id in blockList) {
+                const b = blockList[id];
+                if (b && b.name === "newnote" && !b.trash) {
+                    demoTargetId = id;
+                    break;
+                }
+            }
+        }
+
+        const restoreBtn = document.querySelector("#restoreIcon");
+        if (restoreBtn) restoreBtn.classList.add("lg-pulse");
+
+        if (demoTargetId !== null && demoTargetId !== undefined) {
+            const target = blockList[demoTargetId];
+            let stackIds = [];
+            if (target) {
+                blocks.findDragGroup(demoTargetId);
+                stackIds = Array.isArray(blocks.dragGroup) ? [...blocks.dragGroup] : [demoTargetId];
+            }
+
+            stackIds.forEach(id => {
+                const b = blockList[id];
+                if (b?.container) {
+                    b.container.scaleX = 1.1;
+                    b.container.scaleY = 1.1;
+                }
+            });
+            activity.refreshCanvas();
+
+            setTimeout(() => {
+                // Keep demo non-destructive: only pulse scale to indicate "delete/restore" flow.
+                stackIds.forEach(id => {
+                    const b = blockList[id];
+                    if (!b) return;
+                    if (b.container) {
+                        b.container.scaleX = 0.95;
+                        b.container.scaleY = 0.95;
+                    }
+                });
+                activity.refreshCanvas();
+            }, 650);
+
+            setTimeout(() => {
+                stackIds.forEach(id => {
+                    const b = blockList[id];
+                    if (!b) return;
+                    if (b.container) {
+                        b.container.scaleX = 1;
+                        b.container.scaleY = 1;
+                    }
+                });
+                activity.refreshCanvas();
+            }, 1300);
+        }
+
+        setTimeout(() => {
+            if (restoreBtn) restoreBtn.classList.remove("lg-pulse");
+            window._lgRunningDemo = false;
+            GuideDemos.resetCurrentStepAfterDemo();
+        }, 2200);
+    },
+    showLoadLocalDemo() {
+        window._lgRunningDemo = true;
+        const loadBtn = document.querySelector("#load");
+        const fileInput = document.querySelector("#myOpenFile");
+
+        if (loadBtn) loadBtn.classList.add("lg-pulse");
+        setTimeout(() => {
+            if (loadBtn) loadBtn.classList.remove("lg-pulse");
+            if (fileInput) fileInput.classList.add("lg-pulse");
+        }, 800);
+
+        setTimeout(() => {
+            if (fileInput) fileInput.classList.remove("lg-pulse");
+            window._lgRunningDemo = false;
+            GuideDemos.resetCurrentStepAfterDemo();
+        }, 1800);
+    },
+    showPlanetDemo() {
+        const activity = getRealActivity();
+        window._lgRunningDemo = true;
+        const planetBtn = document.querySelector("#planetIcon");
+        if (planetBtn) planetBtn.classList.add("lg-pulse");
+
+        if (planetBtn) {
+            setTimeout(() => planetBtn.click(), 350);
+        }
+
+        setTimeout(() => {
+            if (activity?.planet) {
+                activity.planet.closePlanet();
+            }
+            if (planetBtn) planetBtn.classList.remove("lg-pulse");
+            window._lgRunningDemo = false;
+            GuideDemos.resetCurrentStepAfterDemo();
+        }, 1800);
+    },
 
     highlight(element) {
         if (!element) return;
