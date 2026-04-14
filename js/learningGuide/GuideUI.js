@@ -22,12 +22,7 @@ window.GuideUI = {
 
                 if (step.demo && GuideDemos[step.demo]) {
                     window._lgRunningDemo = true;
-
                     GuideDemos[step.demo]();
-
-                    setTimeout(() => {
-                        window._lgRunningDemo = false;
-                    }, 2000);
                 }
             };
         }

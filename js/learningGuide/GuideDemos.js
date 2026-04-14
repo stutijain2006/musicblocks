@@ -47,6 +47,31 @@ window.GuideDemos = {
 
         activity.refreshCanvas();
     },
+    resetCurrentStepAfterDemo() {
+        if (!window.LG || !window.GuideSteps) return;
+        const currentStep = GuideSteps[LG.step];
+        if (!currentStep) return;
+
+        // Reset baseline so demo actions never auto-complete the step.
+        LG.prepareStep(currentStep);
+        if (window.GuideUI && GuideUI.createPanel) {
+            GuideUI.createPanel(currentStep);
+        }
+        document.body.classList.remove("lg-step-done");
+        const nextBtn = document.getElementById("lg-next");
+        const status = document.getElementById("lg-status");
+        if (nextBtn) {
+            nextBtn.disabled = true;
+            nextBtn.classList.remove("lg-ready");
+            nextBtn.style.pointerEvents = "none";
+        }
+        if (status) {
+            status.innerHTML = `
+                <span class="lg-status-icon">⏳</span>
+                <span>Waiting for you to complete this step…</span>
+            `;
+        }
+    },
     highlightPaletteBlock(blockName) {
 
         const paletteBody = document.getElementById("PaletteBody");
@@ -113,7 +138,7 @@ window.GuideDemos = {
 
         setTimeout(() => {
 
-            const before = Object.keys(blockList);
+            const before = new Set(Object.keys(blockList).map((id) => String(id)));
 
             /* create repeat block */
             blocks.loadNewBlocks([
@@ -123,44 +148,52 @@ window.GuideDemos = {
             let repeatId = null;
 
             for (const id in blockList) {
-                if (!before.includes(id) && blockList[id].name === "repeat") {
+                if (!before.has(String(id)) && blockList[id].name === "repeat") {
                     repeatId = id;
                     window._lgDemoBlocks.push(id);
                 }
             }
 
-            if (!repeatId) {
+            if (repeatId === null || repeatId === undefined) {
                 window._lgRunningDemo = false;
                 return;
             }
 
             const repeat = blockList[repeatId];
-
-            /* find note block */
-
-            let noteId = null;
-
+            let startId = null;
             for (const id in blockList) {
                 const b = blockList[id];
-                if (b.name === "newnote" && !b.trash) {
-                    noteId = id;
+                if (b && b.name === "start" && !b.trash) {
+                    startId = id;
+                    break;
                 }
             }
-
-            if (!noteId) {
+            if (startId === null || startId === undefined) {
+                window._lgRunningDemo = false;
+                return;
+            }
+            const startBlock = blockList[startId];
+            const originalStartChildId = startBlock?.connections ? startBlock.connections[1] : null;
+            if (originalStartChildId === null || originalStartChildId === undefined) {
                 window._lgRunningDemo = false;
                 return;
             }
 
-            const note = blockList[noteId];
+            for (const id in blockList) {
+                const b = blockList[id];
+                if (b && b.name === "newnote" && !b.trash && b.connections) {
+                    // find top of the same start stack so we move the whole original chain
+                    if (id === String(originalStartChildId)) break;
+                }
+            }
 
             /* animate repeat block entering */
 
             const startX = repeat.container.x;
             const startY = repeat.container.y;
-
-            const targetX = 420;
-            const targetY = 180;
+            const startDock = startBlock?.docks?.[1];
+            const targetX = startDock ? startBlock.container.x + startDock[0] : startBlock.container.x + 140;
+            const targetY = startDock ? startBlock.container.y + startDock[1] - 30 : startBlock.container.y + 40;
 
             const duration = 700;
             const startTime = performance.now();
@@ -178,45 +211,85 @@ window.GuideDemos = {
                 if (t < 1) {
                     requestAnimationFrame(dragRepeat);
                 } else {
-                    connectNote();
+                    connectStackToRepeat();
                 }
             }
 
             requestAnimationFrame(dragRepeat);
 
-            /* move note stack inside repeat */
-
-            function connectNote() {
-
-                blocks.findDragGroup(noteId);
-
-                const dock = repeat.docks[1];
-
-                const tx = repeat.container.x + dock[0];
-                const ty = repeat.container.y + dock[1];
-
-                const dx = tx - note.container.x;
-                const dy = ty - note.container.y;
-
-                for (const blk of blocks.dragGroup) {
-                    blocks.moveBlockRelative(blk, dx, dy);
+            const animateStackToDock = (stackTopId, parentId, dockIndex, done, moveDuration = 650) => {
+                const stackTop = blockList[stackTopId];
+                const parent = blockList[parentId];
+                if (!stackTop || !stackTop.container || !parent || !parent.container || !parent.docks || !parent.docks[dockIndex]) {
+                    done();
+                    return;
                 }
 
-                blocks.blockMoved(noteId);
+                blocks.findDragGroup(stackTopId);
+                const dock = parent.docks[dockIndex];
 
-                activity.refreshCanvas();
+                const tx = parent.container.x + dock[0];
+                const ty = parent.container.y + dock[1];
 
-                setTimeout(finishDemo, 2000);
+                const sx = stackTop.container.x;
+                const sy = stackTop.container.y;
+                const moveStart = performance.now();
+
+                function animate(time) {
+                    const t = Math.min((time - moveStart) / moveDuration, 1);
+                    const ease = 1 - Math.pow(1 - t, 3);
+                    const nx = sx + (tx - sx) * ease;
+                    const ny = sy + (ty - sy) * ease;
+                    const dx = nx - stackTop.container.x;
+                    const dy = ny - stackTop.container.y;
+
+                    for (const blk of blocks.dragGroup) {
+                        blocks.moveBlockRelative(blk, dx, dy);
+                    }
+
+                    activity.refreshCanvas();
+                    if (t < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        blocks.blockMoved(stackTopId);
+                        activity.refreshCanvas();
+                        done();
+                    }
+                }
+                requestAnimationFrame(animate);
+            };
+
+            /* move original start stack inside repeat clamp */
+            function connectStackToRepeat() {
+                animateStackToDock(originalStartChildId, repeatId, 1, () => {
+                    setTimeout(restoreOriginalArrangement, 1200);
+                });
+            }
+
+            function restoreOriginalArrangement() {
+                // move original stack back to start
+                animateStackToDock(originalStartChildId, startId, 1, () => {
+                    // force reconnect in case snap misses
+                    const startNow = blockList[startId];
+                    const orig = blockList[originalStartChildId];
+                    if (startNow && orig && startNow.connections) {
+                        startNow.connections[1] = originalStartChildId;
+                        if (orig.connections) orig.connections[0] = startId;
+                        blocks.blockMoved(originalStartChildId);
+                        activity.refreshCanvas();
+                    }
+                    finishDemo();
+                });
             }
 
             function finishDemo() {
-
                 GuideDemos.clearDemoBlocks();
 
                 const palette = activity.palettes.dict["flow"];
                 if (palette?.hideMenu) palette.hideMenu();
 
                 window._lgRunningDemo = false;
+                GuideDemos.resetCurrentStepAfterDemo();
             }
 
         }, 500);
@@ -227,14 +300,129 @@ window.GuideDemos = {
         if (!activity) return;
 
         window._lgRunningDemo = true;
+        const blocks = activity.blocks;
+        const blockList = blocks.blockList;
         activity.palettes.showPalette("graphics");
 
         setTimeout(() => {
-            const palette = activity.palettes.dict["graphics"];
-            if (palette && palette.hideMenu) {
-                palette.hideMenu();
-            }
-        }, 1000);
+            const before = new Set(Object.keys(blockList).map((id) => String(id)));
+            blocks.loadNewBlocks([[0, "forward", 220, 160, [null, null, null]]]);
+
+            const waitForForward = (attemptsLeft, done) => {
+                let forwardId = null;
+                for (const id in blockList) {
+                    if (!before.has(String(id)) && blockList[id] && blockList[id].name === "forward") {
+                        forwardId = id;
+                        break;
+                    }
+                }
+                if (forwardId !== null && forwardId !== undefined) {
+                    done(forwardId);
+                    return;
+                }
+                if (attemptsLeft <= 0) {
+                    done(null);
+                    return;
+                }
+                setTimeout(() => waitForForward(attemptsLeft - 1, done), 80);
+            };
+
+            waitForForward(20, (forwardId) => {
+                if (forwardId === null || forwardId === undefined) {
+                    const palette = activity.palettes.dict["graphics"];
+                    if (palette?.hideMenu) palette.hideMenu();
+                    window._lgRunningDemo = false;
+                    GuideDemos.resetCurrentStepAfterDemo();
+                    return;
+                }
+
+                if (!window._lgDemoBlocks.includes(forwardId)) {
+                    window._lgDemoBlocks.push(forwardId);
+                }
+
+                let noteId = null;
+                let startId = null;
+                for (const id in blockList) {
+                    const block = blockList[id];
+                    if (block && block.name === "start" && !block.trash) {
+                        startId = id;
+                        break;
+                    }
+                }
+
+                if (startId !== null && startId !== undefined) {
+                    let currentId = blockList[startId]?.connections?.[1] ?? null;
+                    let guard = 0;
+                    while (currentId !== null && currentId !== undefined && guard < 80) {
+                        const current = blockList[currentId];
+                        if (!current || current.trash) break;
+                        if (current.name === "newnote") {
+                            noteId = currentId;
+                            break;
+                        }
+                        currentId = current.connections?.[1] ?? null;
+                        guard++;
+                    }
+                }
+
+                // Fallback to any visible note if start-chain note wasn't found.
+                if (noteId === null || noteId === undefined) {
+                    for (const id in blockList) {
+                        const block = blockList[id];
+                        if (block && block.name === "newnote" && !block.trash) {
+                            noteId = id;
+                            break;
+                        }
+                    }
+                }
+
+                const forward = blockList[forwardId];
+                const note = noteId !== null ? blockList[noteId] : null;
+
+                if (!forward || !forward.container || !note || !note.container) {
+                    GuideDemos.clearDemoBlocks();
+                    const palette = activity.palettes.dict["graphics"];
+                    if (palette?.hideMenu) palette.hideMenu();
+                    window._lgRunningDemo = false;
+                    GuideDemos.resetCurrentStepAfterDemo();
+                    return;
+                }
+
+                forward.container.scaleX = 1.15;
+                forward.container.scaleY = 1.15;
+                activity.refreshCanvas();
+
+                const startX = forward.container.x;
+                const startY = forward.container.y;
+                // Place near the first note's start area (top-left vicinity),
+                // instead of lower down the note lane.
+                const targetX = note.container.x - 110;
+                const targetY = note.container.y + 10;
+                const duration = 700;
+                const startTime = performance.now();
+
+                function animateForward(time) {
+                    const t = Math.min((time - startTime) / duration, 1);
+                    const ease = 1 - Math.pow(1 - t, 3);
+                    forward.container.x = startX + (targetX - startX) * ease;
+                    forward.container.y = startY + (targetY - startY) * ease;
+                    activity.refreshCanvas();
+                    if (t < 1) {
+                        requestAnimationFrame(animateForward);
+                    } else {
+                        setTimeout(() => {
+                            GuideDemos.clearDemoBlocks();
+                            const palette = activity.palettes.dict["graphics"];
+                            if (palette?.hideMenu) palette.hideMenu();
+                            window._lgRunningDemo = false;
+                            GuideDemos.resetCurrentStepAfterDemo();
+                        }, 900);
+                    }
+                }
+
+                requestAnimationFrame(animateForward);
+            });
+        }, 500);
     },
 
     showTonePalette() {
@@ -251,148 +439,256 @@ window.GuideDemos = {
 
         setTimeout(() => {
 
-            const before = Object.keys(blockList);
+            const before = new Set(Object.keys(blockList).map((id) => String(id)));
 
             /* create Set Instrument block */
             blocks.loadNewBlocks([
-                [0, "setinstrument", 250, 200, [null, null, null]]
+                [0, "settimbre", 250, 200, [null, 1, null, 2]],
+                [1, ["voicename", { value: "electronic synth" }], 0, 0, [0]],
+                [2, "hidden", 0, 0, [0, null]]
             ]);
 
-            let instId = null;
+            const waitForSetInstrument = (attemptsLeft, done) => {
+                let instId = null;
+                for (const id in blockList) {
+                    if (!before.has(String(id)) && blockList[id] && blockList[id].name === "settimbre") {
+                        instId = id;
+                        break;
+                    }
+                }
 
+                if (instId !== null && instId !== undefined) {
+                    if (!window._lgDemoBlocks.includes(instId)) {
+                        window._lgDemoBlocks.push(instId);
+                    }
+                    done(instId);
+                    return;
+                }
+
+                if (attemptsLeft <= 0) {
+                    done(null);
+                    return;
+                }
+
+                setTimeout(() => waitForSetInstrument(attemptsLeft - 1, done), 80);
+            };
+
+            waitForSetInstrument(25, (instId) => {
+                if (instId === null || instId === undefined) {
+                    window._lgRunningDemo = false;
+                    return;
+                }
+
+                const instBlock = blockList[instId];
+                if (instBlock?.connections?.[1] !== null && instBlock?.connections?.[1] !== undefined) {
+                    const voiceId = instBlock.connections[1];
+                    if (!window._lgDemoBlocks.includes(voiceId)) {
+                        window._lgDemoBlocks.push(voiceId);
+                    }
+                }
+                if (instBlock?.connections?.[2] !== null && instBlock?.connections?.[2] !== undefined) {
+                    const hiddenId = instBlock.connections[2];
+                    if (!window._lgDemoBlocks.includes(hiddenId)) {
+                        window._lgDemoBlocks.push(hiddenId);
+                    }
+                }
+
+            let startId = null;
             for (const id in blockList) {
-                if (!before.includes(id) && blockList[id].name === "setinstrument") {
-                    instId = id;
-                    window._lgDemoBlocks.push(id);
+                const block = blockList[id];
+                if (block && block.name === "start" && !block.trash) {
+                    startId = id;
+                    break;
                 }
             }
 
-            if (!instId) {
+            if (startId === null || startId === undefined) {
                 window._lgRunningDemo = false;
                 return;
             }
 
-            const instBlock = blockList[instId];
+            const startBlock = blockList[startId];
+            const originalStartChildId = startBlock?.connections ? startBlock.connections[1] : null;
 
-            /* find existing note block */
-
-            let noteId = null;
-
+            /* find an existing note block for animation fallback */
+            let noteId = originalStartChildId;
             for (const id in blockList) {
                 const b = blockList[id];
-                if (b.name === "newnote" && !b.trash) {
+                if (b && b.name === "newnote" && !b.trash) {
                     noteId = id;
+                    if (originalStartChildId !== null && originalStartChildId !== undefined) {
+                        break;
+                    }
                 }
             }
 
-            if (!noteId) {
+            if (noteId === null || noteId === undefined) {
                 window._lgRunningDemo = false;
                 return;
             }
 
             const note = blockList[noteId];
 
-            /* smooth drag of Set Instrument block */
-
-            const startX = instBlock.container.x;
-            const startY = instBlock.container.y;
-
-            const targetX = 420;
-            const targetY = 200;
-
-            const duration = 600;
-            const startTime = performance.now();
-
-            function dragInstrument(time) {
-
-                const t = Math.min((time - startTime) / duration, 1);
-                const ease = 1 - Math.pow(1 - t, 3);
-
-                instBlock.container.x = startX + (targetX - startX) * ease;
-                instBlock.container.y = startY + (targetY - startY) * ease;
-
-                activity.refreshCanvas();
-
-                if (t < 1) {
-                    requestAnimationFrame(dragInstrument);
-                } else {
-                    connectNote();
-                }
-            }
-
-            requestAnimationFrame(dragInstrument);
-
-            /* move note stack into clamp */
-
-            function connectNote() {
-
-                blocks.findDragGroup(noteId);
-
-                const dock = instBlock.docks[1];
-
-                const tx = instBlock.container.x + dock[0];
-                const ty = instBlock.container.y + dock[1];
-
-                const dx = tx - note.container.x;
-                const dy = ty - note.container.y;
-
-                for (const blk of blocks.dragGroup) {
-                    blocks.moveBlockRelative(blk, dx, dy);
+            const animateStackToDock = (stackTopId, parentId, dockIndex, done, duration = 600) => {
+                const stackTop = blockList[stackTopId];
+                const parent = blockList[parentId];
+                if (!stackTop || !stackTop.container || !parent || !parent.container || !parent.docks || !parent.docks[dockIndex]) {
+                    done();
+                    return;
                 }
 
-                blocks.blockMoved(noteId);
+                blocks.findDragGroup(stackTopId);
 
-                activity.refreshCanvas();
+                const dock = parent.docks[dockIndex];
+                const targetX = parent.container.x + dock[0];
+                const targetY = parent.container.y + dock[1];
+                const startX = stackTop.container.x;
+                const startY = stackTop.container.y;
+                const startTime = performance.now();
 
-                highlightInstrument();
-            }
+                function animate(time) {
+                    const t = Math.min((time - startTime) / duration, 1);
+                    const ease = 1 - Math.pow(1 - t, 3);
+                    const nx = startX + (targetX - startX) * ease;
+                    const ny = startY + (targetY - startY) * ease;
+                    const dx = nx - stackTop.container.x;
+                    const dy = ny - stackTop.container.y;
 
-            /* highlight and change instrument */
-
-            function highlightInstrument() {
-
-                const instrumentId = instBlock.connections[2];
-                if (!instrumentId) return;
-
-                const instValue = blockList[instrumentId];
-
-                instValue.container.scaleX = 1.25;
-                instValue.container.scaleY = 1.25;
-
-                activity.refreshCanvas();
-
-                setTimeout(() => {
-
-                    instValue.value = "violin";
-                    instValue.text.text = "violin";
-
-                    instValue.container.updateCache();
+                    for (const blk of blocks.dragGroup) {
+                        blocks.moveBlockRelative(blk, dx, dy);
+                    }
 
                     activity.refreshCanvas();
 
-                    instValue.container.scaleX = 1;
-                    instValue.container.scaleY = 1;
+                    if (t < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        blocks.blockMoved(stackTopId);
+                        activity.refreshCanvas();
+                        done();
+                    }
+                }
 
-                    activity.refreshCanvas();
+                requestAnimationFrame(animate);
+            };
 
-                    finishDemo();
+            const waitForContainers = (attemptsLeft, done) => {
+                const ready =
+                    instBlock &&
+                    instBlock.container &&
+                    startBlock &&
+                    startBlock.container &&
+                    note &&
+                    note.container;
 
+                if (ready || attemptsLeft <= 0) {
+                    done();
+                    return;
+                }
+
+                setTimeout(() => waitForContainers(attemptsLeft - 1, done), 80);
+            };
+
+            waitForContainers(25, () => {
+                animateStackToDock(instId, startId, 1, () => {
+                    const hasStartChild =
+                        originalStartChildId !== null &&
+                        originalStartChildId !== undefined &&
+                        blockList[originalStartChildId] &&
+                        !blockList[originalStartChildId].trash;
+
+                    const attachNotesToInstrument = (done) => {
+                        if (!hasStartChild) {
+                            done();
+                            return;
+                        }
+                        // For settimbre, dock index 2 is the clamp input for note stack.
+                        animateStackToDock(originalStartChildId, instId, 2, done, 650);
+                    };
+
+                    const changeInstrument = (done) => {
+                        // In settimbre, connection[1] is the voicename value block.
+                        const instrumentId = instBlock.connections[1];
+                        if (instrumentId === null || instrumentId === undefined) {
+                            done();
+                            return;
+                        }
+
+                        const instValue = blockList[instrumentId];
+                        if (!instValue || !instValue.container) {
+                            done();
+                            return;
+                        }
+
+                        instValue.container.scaleX = 1.25;
+                        instValue.container.scaleY = 1.25;
+                        activity.refreshCanvas();
+
+                        setTimeout(() => {
+                            instValue.value = "violin";
+                            instValue.text.text = "violin";
+                            const z = instValue.container.children.length - 1;
+                            instValue.container.setChildIndex(instValue.text, z);
+                            instValue.container.updateCache();
+                            instValue.container.scaleX = 1;
+                            instValue.container.scaleY = 1;
+                            activity.refreshCanvas();
+                            done();
+                        }, 700);
+                    };
+
+                    const restoreOriginalArrangement = () => {
+                        const finish = () => {
+                            GuideDemos.clearDemoBlocks();
+
+                            const palette = activity.palettes.dict["tone"];
+                            if (palette?.hideMenu) palette.hideMenu();
+
+                            window._lgRunningDemo = false;
+                            GuideDemos.resetCurrentStepAfterDemo();
+                        };
+
+                        if (!hasStartChild) {
+                            setTimeout(finish, 600);
+                            return;
+                        }
+
+                        setTimeout(() => {
+                            animateStackToDock(originalStartChildId, startId, 1, () => {
+                                setTimeout(() => {
+                                    // Safety: ensure the note stack is truly reattached to start.
+                                    const startNow = blockList[startId];
+                                    if (
+                                        startNow &&
+                                        startNow.connections &&
+                                        startNow.connections[1] !== originalStartChildId
+                                    ) {
+                                        animateStackToDock(originalStartChildId, startId, 1, finish, 350);
+                                        return;
+                                    }
+                                    const originalChild = blockList[originalStartChildId];
+                                    if (startNow && originalChild) {
+                                        startNow.connections[1] = originalStartChildId;
+                                        originalChild.connections[0] = startId;
+                                        blocks.blockMoved(originalStartChildId);
+                                        activity.refreshCanvas();
+                                    }
+                                    finish();
+                                }, 500);
+                            }, 650);
+                        }, 500);
+                    };
+
+                    attachNotesToInstrument(() => {
+                        setTimeout(() => {
+                            changeInstrument(() => {
+                                restoreOriginalArrangement();
+                            });
+                        }, 300);
+                    });
                 }, 700);
-            }
-
-            function finishDemo() {
-
-                setTimeout(() => {
-
-                    GuideDemos.clearDemoBlocks();
-
-                    const palette = activity.palettes.dict["tone"];
-                    if (palette?.hideMenu) palette.hideMenu();
-
-                    window._lgRunningDemo = false;
-
-                }, 2200);
-            }
+            });
+            });
 
         }, 500);
     },
@@ -691,49 +987,194 @@ window.GuideDemos = {
 
         setTimeout(() => {
 
-            const before = Object.keys(activity.blocks.blockList);
+            const blocks = activity.blocks;
+            const blockList = blocks.blockList;
 
-            /* create 3 note blocks */
-            activity.blocks.loadNewBlocks([
-                [0, "newnote", 420, 220, [null, null]],
-                [1, "newnote", 420, 300, [null, null]],
-                [2, "newnote", 420, 380, [null, null]]
+            const before = new Set(Object.keys(blockList).map((id) => String(id)));
+            // Create full notes (not blank shells) so users see real blocks.
+            blocks.loadNewBlocks([
+                [0, "newnote", 420, 220, [null, 1, 4, 7]],
+                [1, "divide", 0, 0, [0, 2, 3]],
+                [2, ["number", { value: 1 }], 0, 0, [1]],
+                [3, ["number", { value: 4 }], 0, 0, [1]],
+                [4, "vspace", 0, 0, [0, 5]],
+                [5, "pitch", 0, 0, [4, 6, 8, null]],
+                [6, ["solfege", { value: "sol" }], 0, 0, [5]],
+                [7, "hidden", 0, 0, [0, null]],
+                [8, ["number", { value: 4 }], 0, 0, [5]]
+            ]);
+            blocks.loadNewBlocks([
+                [0, "newnote", 420, 300, [null, 1, 4, 7]],
+                [1, "divide", 0, 0, [0, 2, 3]],
+                [2, ["number", { value: 1 }], 0, 0, [1]],
+                [3, ["number", { value: 4 }], 0, 0, [1]],
+                [4, "vspace", 0, 0, [0, 5]],
+                [5, "pitch", 0, 0, [4, 6, 8, null]],
+                [6, ["solfege", { value: "sol" }], 0, 0, [5]],
+                [7, "hidden", 0, 0, [0, null]],
+                [8, ["number", { value: 4 }], 0, 0, [5]]
+            ]);
+            blocks.loadNewBlocks([
+                [0, "newnote", 420, 380, [null, 1, 4, 7]],
+                [1, "divide", 0, 0, [0, 2, 3]],
+                [2, ["number", { value: 1 }], 0, 0, [1]],
+                [3, ["number", { value: 4 }], 0, 0, [1]],
+                [4, "vspace", 0, 0, [0, 5]],
+                [5, "pitch", 0, 0, [4, 6, 8, null]],
+                [6, ["solfege", { value: "sol" }], 0, 0, [5]],
+                [7, "hidden", 0, 0, [0, null]],
+                [8, ["number", { value: 4 }], 0, 0, [5]]
             ]);
 
-            const blockList = activity.blocks.blockList;
-
-            for (const id in blockList) {
-
-                if (!before.includes(id)) {
-
+            const collectNewNoteIds = () => {
+                const ids = [];
+                for (const id in blockList) {
+                    if (before.has(String(id))) continue;
                     const block = blockList[id];
-
-                    if (block.name === "newnote") {
-
-                        window._lgDemoBlocks.push(id);
-
-                        if (block.container) {
-                            block.container.scaleX = 1.15;
-                            block.container.scaleY = 1.15;
-                        }
+                    if (block && block.name === "newnote" && !block.trash) {
+                        ids.push(id);
                     }
                 }
-            }
+                return ids;
+            };
+            const collectAllNewIds = () => {
+                const ids = [];
+                for (const id in blockList) {
+                    if (!before.has(String(id)) && blockList[id] && !blockList[id].trash) {
+                        ids.push(id);
+                    }
+                }
+                return ids;
+            };
 
-            activity.refreshCanvas();
+            const waitForNewNoteContainers = (attemptsLeft, done) => {
+                const newNoteIds = collectNewNoteIds();
+                const ready = newNoteIds.length >= 3 && newNoteIds.every((id) => {
+                    const note = blockList[id];
+                    return note && note.container;
+                });
+                if (ready || attemptsLeft <= 0) {
+                    done(newNoteIds);
+                    return;
+                }
+                setTimeout(() => waitForNewNoteContainers(attemptsLeft - 1, done), 80);
+            };
 
-            setTimeout(() => {
+            waitForNewNoteContainers(25, (newNoteIds) => {
+                for (const id of collectAllNewIds()) {
+                    if (!window._lgDemoBlocks.includes(id)) {
+                        window._lgDemoBlocks.push(id);
+                    }
+                }
+                for (const noteId of newNoteIds) {
+                    const note = blockList[noteId];
+                    if (note?.container) {
+                        note.container.scaleX = 1.15;
+                        note.container.scaleY = 1.15;
+                    }
+                }
+                activity.refreshCanvas();
 
-                GuideDemos.clearDemoBlocks();
-
-                const palette = activity.palettes.dict["rhythm"];
-                if (palette && palette.hideMenu) {
-                    palette.hideMenu();
+                let startId = null;
+                for (const id in blockList) {
+                    if (blockList[id] && blockList[id].name === "start" && !blockList[id].trash) {
+                        startId = id;
+                        break;
+                    }
                 }
 
-                window._lgRunningDemo = false;
+                if ((startId === null || startId === undefined) || newNoteIds.length < 3) {
+                    window._lgRunningDemo = false;
+                    return;
+                }
 
-            }, 2000);
+            const getTailId = () => {
+                let currentId = startId;
+                let guard = 0;
+                while (guard < 50) {
+                    const current = blockList[currentId];
+                    if (!current || !current.connections || current.connections[1] === null || current.connections[1] === undefined) {
+                        return currentId;
+                    }
+                    currentId = current.connections[1];
+                    guard++;
+                }
+                return currentId;
+            };
+
+            const animateToDock = (noteId, targetParentId, done) => {
+                const note = blockList[noteId];
+                const parent = blockList[targetParentId];
+                if (!note || !note.container || !parent || !parent.container || !parent.docks) {
+                    done();
+                    return;
+                }
+
+                blocks.findDragGroup(noteId);
+
+                // For note stacks, next-chain dock is always index 1.
+                const dock = parent.docks[1];
+                if (!dock) {
+                    done();
+                    return;
+                }
+                const targetX = parent.container.x + dock[0];
+                const targetY = parent.container.y + dock[1];
+                const startX = note.container.x;
+                const startY = note.container.y;
+                const duration = 450;
+                const startTime = performance.now();
+
+                function animate(time) {
+                    const t = Math.min((time - startTime) / duration, 1);
+                    const ease = 1 - Math.pow(1 - t, 3);
+                    const nx = startX + (targetX - startX) * ease;
+                    const ny = startY + (targetY - startY) * ease;
+                    const dx = nx - note.container.x;
+                    const dy = ny - note.container.y;
+
+                    for (const blk of blocks.dragGroup) {
+                        blocks.moveBlockRelative(blk, dx, dy);
+                    }
+
+                    activity.refreshCanvas();
+
+                    if (t < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        blocks.blockMoved(noteId);
+                        activity.refreshCanvas();
+                        done();
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            };
+
+                const connectSequentially = (index) => {
+                    if (index >= newNoteIds.length) {
+                        setTimeout(() => {
+                            GuideDemos.clearDemoBlocks();
+
+                            const palette = activity.palettes.dict["rhythm"];
+                            if (palette && palette.hideMenu) {
+                                palette.hideMenu();
+                            }
+
+                            window._lgRunningDemo = false;
+                            GuideDemos.resetCurrentStepAfterDemo();
+                        }, 1200);
+                        return;
+                    }
+
+                    const tailId = getTailId();
+                    animateToDock(newNoteIds[index], tailId, () => {
+                        setTimeout(() => connectSequentially(index + 1), 220);
+                    });
+                };
+
+                connectSequentially(0);
+            });
 
         }, 500);
     },

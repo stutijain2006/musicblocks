@@ -270,7 +270,10 @@ window.GuideValidator = {
         if (!activity) return false;
 
         const blockList = activity.blocks.blockList || {};
-        let current = 0;
+        const initialNoteIds = LG.initialCounts[LG.step] || [];
+        const initialIdSet = new Set(initialNoteIds.map((id) => String(id)));
+        const demoIdSet = new Set((window._lgDemoBlocks || []).map((id) => String(id)));
+        let addedConnectedToStart = 0;
 
         for (const id in blockList) {
             const block = blockList[id];
@@ -279,22 +282,40 @@ window.GuideValidator = {
                 block.name &&
                 block.name.toLowerCase().includes("note") &&
                 !block.trash &&
-                !window._lgDemoBlocks.includes(id) &&
-                block.container?.visible !== false
+                !demoIdSet.has(String(id)) &&
+                block.container?.visible !== false &&
+                !initialIdSet.has(String(id)) &&
+                this.hasStartAncestor(block, blockList)
             ) {
-                current++;
+                addedConnectedToStart++;
             }
         }
 
-        const initial = LG.initialCounts[LG.step] || 0;
-        const added = current - initial;
-        const result = added >= 3;
+        const result = addedConnectedToStart >= 3;
 
         console.log(
-            `🎵 Melody check — initial: ${initial}, current: ${current}, added: ${added}, result: ${result}`
+            `🎵 Melody check — initial notes: ${initialNoteIds.length}, newly-added connected notes: ${addedConnectedToStart}, result: ${result}`
         );
 
         return result;
+    },
+    hasStartAncestor(block, blockList) {
+        let parent = block;
+        let depth = 0;
+
+        while (parent && depth < 50) {
+            const parentId = parent.connections && parent.connections[0];
+            if (parentId === null || parentId === undefined) return false;
+
+            parent = blockList[parentId];
+            if (!parent || parent.trash) return false;
+
+            if (parent.name === "start") return true;
+
+            depth++;
+        }
+
+        return false;
     },
     validateToneBlock() {
         if (window._lgRunningDemo) return false;

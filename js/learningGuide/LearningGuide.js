@@ -306,7 +306,7 @@ let LG = {
             const activity = getRealActivity();
             const blockList = activity?.blocks?.blockList || {};
 
-            let noteCount = 0;
+            const noteIds = [];
 
             for (const id in blockList) {
                 const block = blockList[id];
@@ -317,15 +317,15 @@ let LG = {
                     !block.trash &&
                     block.container?.visible !== false
                 ) {
-                    noteCount++;
+                    noteIds.push(id);
                 }
             }
 
-            this.initialCounts[this.step] = noteCount;
+            this.initialCounts[this.step] = noteIds;
 
             console.log(
-                `🎵 Step ${this.step} initial note count:`,
-                noteCount
+                `🎵 Step ${this.step} initial note IDs:`,
+                noteIds
             );
             return;
         }

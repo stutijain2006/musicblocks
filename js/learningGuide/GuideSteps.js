@@ -18,7 +18,7 @@ window.GuideSteps = [
 
 { id:"play", text:"Press ▶️ Play to hear your music. Please let the song finish playing, or press ⏹️ Stop to continue.", action:"play", demo:"showPlayButton" },
 
-{ id:"melody", text:"Add 3 more Note blocks to extend your melody.", action:"melody", demo:"showMelodyExample" },
+{ id:"melody", text:"Add 3 more Note blocks and attach them to the existing Start stack to extend your melody.", action:"melody", demo:"showMelodyExample" },
 
 { id:"tone", text:"Open Tone palette and wrap your notes with Set Instrument. Add a NEW Set Instrument block and choose a different instrument.", action:"tone_block", demo:"showTonePalette" },
 
