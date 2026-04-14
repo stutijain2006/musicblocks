@@ -93,6 +93,33 @@ Object.defineProperty(window, "localStorage", {
     value: { languagePreference: "en" }
 });
 
+function setupHelpDOM() {
+    const helpBody = document.createElement("div");
+    helpBody.id = "helpBodyDiv";
+
+    const leftArrow = document.createElement("div");
+    leftArrow.id = "left-arrow";
+    leftArrow.classList = {
+        contains: jest.fn(() => false),
+        add: jest.fn(),
+        remove: jest.fn()
+    };
+
+    const rightArrow = document.createElement("div");
+    rightArrow.id = "right-arrow";
+    rightArrow.classList = {
+        contains: jest.fn(() => false),
+        add: jest.fn(),
+        remove: jest.fn()
+    };
+
+    document.body.appendChild(helpBody);
+    document.body.appendChild(leftArrow);
+    document.body.appendChild(rightArrow);
+
+    global.docById = jest.fn(id => document.getElementById(id));
+}
+
 // Wrap source and assign HelpWidget to global
 const wrappedSource = helpSource + "\nglobal.HelpWidget = HelpWidget;\n";
 new Function(wrappedSource)();
@@ -124,6 +151,7 @@ afterEach(() => {
 function createMockActivity(options = {}) {
     return {
         __keyPressed: jest.fn(),
+        textMsg: jest.fn(),
         blocks: {
             activeBlock: options.activeBlock || null,
             blockList: options.blockList || {},
@@ -416,6 +444,7 @@ describe("HelpWidget", () => {
 
             // Run the setup timeout so DOM elements are created
             jest.runAllTimers();
+            setupHelpDOM();
 
             const showPageSpy = jest.spyOn(hw, "_showPage");
             hw.showPageByName("Using Blocks");
@@ -440,6 +469,7 @@ describe("HelpWidget", () => {
             const activity = createMockActivity();
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
+            setupHelpDOM();
 
             const showPageSpy = jest.spyOn(hw, "_showPage");
             hw.showPageByName("Welcome to Music Blocks");
@@ -452,6 +482,7 @@ describe("HelpWidget", () => {
             const activity = createMockActivity();
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
+            setupHelpDOM();
 
             const showPageSpy = jest.spyOn(hw, "_showPage");
             hw.showPageByName("Congratulations.");
@@ -464,6 +495,7 @@ describe("HelpWidget", () => {
             const activity = createMockActivity();
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
+            setupHelpDOM();
 
             const showPageSpy = jest.spyOn(hw, "_showPage");
             // "Learn more" is the link label at index 4 of page 3
@@ -480,6 +512,7 @@ describe("HelpWidget", () => {
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
 
+            setupHelpDOM();
             hw._showPage(0);
 
             const helpBody = document.getElementById("helpBodyDiv");
@@ -492,6 +525,7 @@ describe("HelpWidget", () => {
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
 
+            setupHelpDOM();
             hw._showPage(2);
 
             const helpBody = document.getElementById("helpBodyDiv");
@@ -504,6 +538,7 @@ describe("HelpWidget", () => {
             jest.runAllTimers();
 
             // Page 0 is "Welcome to Music Blocks" - a known page without dimensions
+            setupHelpDOM();
             hw._showPage(0);
 
             const helpBody = document.getElementById("helpBodyDiv");
@@ -519,6 +554,7 @@ describe("HelpWidget", () => {
             jest.runAllTimers();
 
             // Page 3 is "Using Blocks" - NOT in the known list
+            setupHelpDOM();
             hw._showPage(3);
 
             const helpBody = document.getElementById("helpBodyDiv");
@@ -534,6 +570,7 @@ describe("HelpWidget", () => {
             jest.runAllTimers();
 
             // Page 3 has link and link label
+            setupHelpDOM();
             hw._showPage(3);
 
             const helpBody = document.getElementById("helpBodyDiv");
@@ -549,6 +586,7 @@ describe("HelpWidget", () => {
             jest.runAllTimers();
 
             // Page 0 has only 3 entries
+            setupHelpDOM();
             hw._showPage(0);
 
             const helpBody = document.getElementById("helpBodyDiv");
@@ -561,6 +599,7 @@ describe("HelpWidget", () => {
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
 
+            setupHelpDOM();
             hw._showPage(0);
 
             const helpBody = document.getElementById("helpBodyDiv");
@@ -573,6 +612,7 @@ describe("HelpWidget", () => {
             jest.runAllTimers();
 
             mockWidgetWindow.takeFocus.mockClear();
+            setupHelpDOM();
             hw._showPage(1);
 
             expect(mockWidgetWindow.takeFocus).toHaveBeenCalled();
@@ -583,6 +623,7 @@ describe("HelpWidget", () => {
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
 
+            setupHelpDOM();
             hw._showPage(HELPCONTENT.length - 1);
 
             const rightArrow = document.getElementById("right-arrow");
@@ -594,6 +635,7 @@ describe("HelpWidget", () => {
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
 
+            setupHelpDOM();
             hw._showPage(0);
 
             const leftArrow = document.getElementById("left-arrow");
@@ -605,6 +647,7 @@ describe("HelpWidget", () => {
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
 
+            setupHelpDOM();
             hw._showPage(2);
 
             const rightArrow = document.getElementById("right-arrow");
@@ -618,6 +661,7 @@ describe("HelpWidget", () => {
             const hw = new HelpWidget(activity, false);
             jest.runAllTimers();
 
+            setupHelpDOM();
             hw._showPage(0);
             hw._showPage(1);
 
